@@ -52,12 +52,12 @@ for (e=1:size(ExpTrack,1))
            %Calc distance moved in px at each frame -frameN is on col 1, X(col 2) Y (col 3) Take Diff in sqrt((Xn-Xn+1)^2+(Yn-Yn+1)^2) -
            
            %Fix TrackData remove Spurious Jumps in frame
-           datbreakpoint  = find(diff(trackData(:,1))>1);
-           if ( isempty(datbreakpoint) == 0)
-                trackData = trackData(1:datbreakpoint(1),:);
+%           datbreakpoint  = find(diff(trackData(:,1))>1);
+%           if ( isempty(datbreakpoint) == 0)
+%                trackData = trackData(1:datbreakpoint(1),:);
                 %For some Reason Tracker Reuses  trackIDs
                 %error('Found Broken Lifetime');
-           end
+%           end
            %Check Track Lifetime Again - Filter If Less than Required Size
            if (length(trackData(:,2)) < MinLifetime || length(trackData(:,2)) < 2)
                continue; %Go to Next

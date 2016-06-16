@@ -72,14 +72,17 @@ bool bMouseLButtonDown;
 
 
 //Area Filters
-double dMeanBlobArea = 300;
+double dMeanBlobArea = 10;
 double dVarBlobArea = 50;
 
+#define LOW_LOWERBOUND_BLOB_AREA 60.0
+#define LOW_UPPERBOUND_BLOB_AREA 1200.0
+
 //BG History
-const int MOGhistory        = 100;
+const int MOGhistory        = 200;
 //Processing Loop delay
 uint cFrameDelayms    = 1;
-double dLearningRate        = 0.01;
+double dLearningRate        = 0.001;
 
 using namespace std;
 
@@ -142,7 +145,7 @@ int main(int argc, char *argv[])
 
     QString invideoname = "*.mpg";
     unsigned int istartFrame = 0;
-    QStringList invideonames =QFileDialog::getOpenFileNames(0, "Select timelapse video to Process", qApp->applicationDirPath(), "Video file (*.mpg *.avi *.mp4 *.h264)", 0, 0);
+    QStringList invideonames =QFileDialog::getOpenFileNames(0, "Select timelapse video to Process", qApp->applicationDirPath(), "Video file (*.mpg *.avi *.mp4 *.h264 *.mov)", 0, 0);
 
     //Show Video list to process
     cout << "Video List To process:" << endl;
@@ -252,12 +255,13 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
         nFrame = capture.get(CV_CAP_PROP_POS_FRAMES) + startFrameCount;
 
         //If Mask shows that a large ratio of pixels is changing then - adjust learning rate to keep activity below 0.006
-        if (dblRatioPxChanged > 0.01)
-            dLearningRate = max(min(dLearningRate*2,0.01),0.0);
-        else if (nFrame > MOGhistory*2)
-            dLearningRate = 0.0001;
+
+        if (nLarva > 2) //Added Count Limit (dblRatioPxChanged > 0.35 ||
+            dLearningRate = max(min(dLearningRate*1.00002,0.001),0.00);
+        else if (nLarva < 1 || dMeanBlobArea < 300)//(nFrame > MOGhistory*2)
+            dLearningRate = dLearningRate*0.98; //Exp Reduction
         else
-            dLearningRate = 0.001;
+            dLearningRate = 0.000001; //Default Value -  Forgets
 
 
         //update the background model
@@ -312,7 +316,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
         //Count Fg Pixels // Ratio
         std::stringstream strFGPxRatio;
         dblRatioPxChanged = (double)cv::countNonZero(fgMaskMOG2)/(double)fgMaskMOG2.size().area();
-        strFGPxRatio << "Dpx:" <<  dblRatioPxChanged;
+        strFGPxRatio << "mA:" <<  dMeanBlobArea;
         cv::rectangle(frame, cv::Point(10, 100), cv::Point(100,120), cv::Scalar(255,255,255), -1);
         cv::putText(frame, strFGPxRatio.str(), cv::Point(15, 113),
                 cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
@@ -547,7 +551,8 @@ int countObjectsviaBlobs(cv::Mat& srcimg,cvb::CvBlobs& blobs,cvb::CvTracks& trac
     cvb::cvFilterByROI(vRoi,blobs); //Remove Blobs Outside ROIs
     cvb::cvBlobAreaMeanVar(blobs,dMeanBlobArea,dVarBlobArea);
     double dsigma = 3.0*sqrt(dVarBlobArea);
-    cvb::cvFilterByArea(blobs,max(dMeanBlobArea-dsigma,9.0),(unsigned int)max((dMeanBlobArea+dsigma),15.0)); //Remove Small Blobs
+    cvb::cvFilterByArea(blobs,max(dMeanBlobArea-dsigma,LOW_LOWERBOUND_BLOB_AREA),(unsigned int)max((dMeanBlobArea+3*dsigma),LOW_UPPERBOUND_BLOB_AREA)); //Remove Small Blobs
+
 
     //Debug Show Mean Size Var
     //std::cout << dMeanBlobArea <<  " " << dMeanBlobArea+3*sqrt(dVarBlobArea) << endl;
@@ -569,7 +574,7 @@ int countObjectsviaBlobs(cv::Mat& srcimg,cvb::CvBlobs& blobs,cvb::CvTracks& trac
             if (iroi.contains(pnt))
             {
                 //cnt++;
-                cvb::cvRenderBlob(labelImg, blob, &fgMaskImg, &frameImg, CV_BLOB_RENDER_CENTROID|CV_BLOB_RENDER_BOUNDING_BOX | CV_BLOB_RENDER_COLOR, cv::Scalar(0,200,0),0.6);
+                cvb::cvRenderBlob(labelImg, blob, &fgMaskImg, &frameImg, CV_BLOB_RENDER_CENTROID|CV_BLOB_RENDER_BOUNDING_BOX | CV_BLOB_RENDER_COLOR | CV_BLOB_RENDER_AREA, cv::Scalar(0,200,0),0.6);
             }
         }
 

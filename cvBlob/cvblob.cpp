@@ -290,6 +290,15 @@ namespace cvb
         cvLine(imgDest,cvPoint(int(x1),int(y1)),cvPoint(int(x2),int(y2)),CV_RGB(0.,255.,0.));
       }
 
+      if (mode & CV_BLOB_RENDER_AREA)
+      {
+          CvFont* font =  new CvFont;
+          cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.5, 0.5, 0, 1);
+          stringstream buffer;
+          buffer << blob->area;
+          cvPutText(imgDest, buffer.str().c_str(), cvPoint((int)blob->centroid.x+10, (int)blob->centroid.y-10), font, CV_RGB(50.,55.,200.));
+      }
+
       if (mode&CV_BLOB_RENDER_CENTROID)
       {
         cvLine(imgDest,cvPoint(int(blob->centroid.x)-3,int(blob->centroid.y)),cvPoint(int(blob->centroid.x)+3,int(blob->centroid.y)),CV_RGB(0.,0.,255.));

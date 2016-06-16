@@ -1,3 +1,6 @@
+%6/2016 MODIFIED FOR BIOLUMINANCE ASSAY - Takes Data from Tracker And Combines
+%with biolum Data
+
 %Import Track Data into A form that retains Experiment/vial structure -
 % Process data giving Euclidean distance in Px / normalize by framerate
 % Notes: Lifetimes In track data are not reliable!
@@ -15,9 +18,11 @@
 %On 31/5 we run experiments with 9 vials for each 4 conditions, one including
 %the tau genotype - Thus using both cameras flycam3 (18 vials) flycam4 -
 %I Combined the vial numbers manually by renaming the files of flycam4
-ExpCondTitles = {' ATTP40',' BWD47',' 36','29τ'}; %For T experiments
+ExpCondTitles = {' mb247xga',' BWD47',' 36','29τ'}; %For T experiments
 ExpCondFood = {'0.0% D','0.0% D','0.0% D','0.0% D','0.0% D','0.0% D','0.0% D','0.0% D','0.0% D'};
 %ExpCondFood = {'0.0% DMSO','0.0% DMSO','0.0% DMSO','0.5% DMSO','0.5% DMSO','0.5% DMSO','1.0% DMSO','1.0% DMSO','1.0% DMSO'};
+
+
 
 %load('/media/ntfspart2/PilotVialTrack/ExpSetR_201603/Flycam3/Results/LarvaTrackData_R1-5_.mat')
 
@@ -37,14 +42,19 @@ addpath(fileparts(which('processFilesTracks.m')))
 %cd /media/klagogia/SMART/PilotVialTrack/Flycam4/Results
 
 %File To ssave/append centroid Data
-strOutputDir = '/media/klagogia/SMART/PilotVialTrack/';
-outCentrFile = strcat(strOutputDir,'/ActivityCentroids-EXPT.mat');
-cd(strcat(strOutputDir,'Flycam4/Results'));
+strOutputDir = '/home/klagogia/Dropbox/Bioluminesce/biolum/dat/mb247xga';
+outCentrFile = strcat(strOutputDir,'/ActivityCentroids-EXPB.mat');
+cd(strcat(strOutputDir,''));
 %%Import FROM CSV FILES
 %VialAge : Age of the vials for an experiment j - from embryo to the beginning of timelapse Recording
 
-[framePeriod,VialAge,ExpIDs,ExpTrack ] = importCSVtoCell( '*V*_tracks','EXPT2*' );
-strOutputTag = '_T2_';
+
+dataIndex = 8;  % <- Put the BioLumData Index From biolum_mb247 array here -
+bioLumPeriod = cell2mat(biolum_mb247(dataIndex,3));
+strOutputTag = '_MB247_1521';
+[framePeriod,VialAge,ExpIDs,ExpTrack ] = importCSVtoCell( '*V*_tracks','EXP1521*' );
+
+
 
 %Transform - Y Inversion
 %ExpTrack{:,:}(:,5) = 768 - ExpTrack{:,:}(:,5)
@@ -57,8 +67,8 @@ strOutputTag = '_T2_';
 %Give 3 days data points 1 sec each.
 % Genotypes are 3 organized in this order : 1st WT (oregonR), 2nd Genetic Control, 3rd AlfaBeta Mutant
 ConditionIndex      = 1; %Experimental Condition ID : Food(Condition)/Genetype Combinations
-ConditionIndexMax   = 4; %Defines max exp. configuration being replicated - ex. 1= Food1/Gen1 1= Food2/Gen1. Combos
-CondReplicates      = 9; %# of replicates for each condition
+ConditionIndexMax   = 1; %Defines max exp. configuration being replicated - ex. 1= Food1/Gen1 1= Food2/Gen1. Combos
+CondReplicates      = 1; %# of replicates for each condition
 
 % The videos have 2 rows of 9 vials - Vials 1-10 have identical conditions so they go in PAIRS
 %VialPairsPerCondition = [[1,10];[2,11];[3,12];[4,13];[5,14];[6,15];[7,16];[8,17];[9,18]]; %OR Normal Food
@@ -72,12 +82,12 @@ CondReplicates      = 9; %# of replicates for each condition
 %For new 2016/03-04 More Controls Setup We have 2 row - 6 Conditions - 3 reps Each
 %VialPairsPerCondition = [[1,2,3];[4,5,6];[7,8,9];[10,11,12];[13,14,15];[16,17,18];]; %OR Normal Food
 
-VialPairsPerCondition = [[1:9];[10:18];[19:27];[28:36]]; %For T experiment 
+VialPairsPerCondition = [[1:1];]; %For T experiment 
 
 %Condition Groups - Used for plotting genotypes against controls
 %ConditionGroups = {[1,2,3,6];[4,5]}; %ATTP2 & 48.2 are plotted together
 
-ConditionGroups = {[1,2,3,4]}; %ATTP2 & 48.2 are plotted together
+ConditionGroups = {[1]}; %ATTP2 & 48.2 are plotted together
 
 timePoints = max(VialAge) + 24*3*3600;%Total Time points in seconds over which to analyse data
 %FramePeriod sampled at each timelapse Experiment -
@@ -100,14 +110,14 @@ display(framePeriod);
 ExpTrackResultsInTime = {};
 bVerbose=0;
 
-goToHour =87; %Focus Time - Used for BoxPlot And Example Track Displa - Exp Hour - with 0 being Embryo Placement
+goToHour =0; %Focus Time - Used for BoxPlot And Example Track Displa - Exp Hour - with 0 being Embryo Placement
 %FILTERS Each Experiments Data set
-MinLifetime     = 2; %Minimum Number of Path Steps
+MinLifetime     = 10; %Minimum Number of Path Steps
 MaxLifetime     = 20000; %Maximum Number of Path Steps
-MinDistance     = 5; %Minimum Track length to consider def 10
-MinStepLength   = 1; %%Cut Tracklet when 2-frame displacement drops below value 
-MaxStepLength   = 13; %MaxpxSpeed -->Between two frames rejects steps larger than this - Larva length max 30px in 1600x1200 frame 2fps
-TimeFrameWidth  = 3*3600; %Frame Sliding Window in sec Overwhich results are averaged
+MinDistance     = 1; %Minimum Track length to consider def 10
+MinStepLength   = 0; %%Cut Tracklet when 2-frame displacement drops below value 
+MaxStepLength   = 60; %MaxpxSpeed -->Between two frames rejects steps larger than this - Larva length max 30px in 1600x1200 frame 2fps
+
 
 % Organize data in a Sliding Window
 InitTime = 0*3600; %Start processing Data from InitTime / Default 0
@@ -116,10 +126,11 @@ wi = 0;
 %Estimate Max FrameN from 1st Experiment
 e = 1;
 maxRecordingTime = max(vertcat([ExpTrack{e,1}(:,1)]))*framePeriod(e);
-timeAdvance = 30*60; %Fwd Time Step in secs 
+TimeFrameWidth  = maxRecordingTime-1; %Frame Sliding Window in sec Overwhich results are averaged
+timeAdvance = TimeFrameWidth; %Fwd Time Step in secs 
 
 
-for StartTime=(InitTime + TimeFrameWidth):timeAdvance:(maxRecordingTime)
+for StartTime=(InitTime):timeAdvance:(maxRecordingTime)
    wi = wi+1;
    %                                                    (ExpTrack,ExpIDs,framePeriod,MinLifetime, MaxLifetime, MinDistance, MaxpxSpeed, FromTime,TimeWindow, MinpxSpeed,bVerb ) 
    ExpTrackResultsInTime{wi} = ExtractFilteredTrackData(ExpTrack,ExpIDs,framePeriod,MinLifetime, MaxLifetime, MinDistance, MaxStepLength, StartTime,TimeFrameWidth, MinStepLength ,bVerbose);
@@ -128,21 +139,86 @@ end
 
 save(strcat('LarvaTrackData',strOutputTag,'.mat'));
 %% Plot Indicative results - Distribution of mean Tracklet Speeds
-plotMeanSpeed;
+%plotMeanSpeed;
 
 %% Plot Track Length
-plotTrackLengthDistributions;
+%plotTrackLengthDistributions;
 
 
 
-%% Plot Example Tracks
+
+%% 
+
+%% Plot ALL Tracks - With BiolumColour
+% NOTE: Y values are inverted since 0 Point in plot as at the bottom
+imgSize = [640,480];
+cmap = colormap(hot);
 
 
-t= (goToHour*3600 - VialAge(1))/timeAdvance; %
+bioDatNorm = round((length(cmap)-1)*(biolum_mb247{dataIndex}/max(biolum_mb247{dataIndex})))+1;
+
+hf = figure('Name',sprintf('Tracks at t=%d-%d hours',goToHour,goToHour+TimeFrameWidth/3600));
+xlim([0 imgSize(1)]);
+ylim([0 imgSize(2)]);
+
+hold on;
+
+e = 1;
+MinLifetime = 0;
+%for e=1:size(ExpTrack,1)
+%    for (v=1:size(ExpTrack,2))
+e= 1;
+v = 1;
+subplot(1,2,1)
+axis square
+title('Track Points With Coloured BioLum');
+hold on;
+        %FilteredTrackIDs = unique(ExpTrackResults{e,v}( find(ExpTrackResults{e,v}(:,6)>MinLifetime),2 ));
+        %find(vertcat(ExpTrackResults{e,v}.PointCount) > 6)
+        %trackN = length(FilteredTrackIDs);
+        trackN = length(ExpTrack{e,v});
+        %for (i=1:1:trackN)
+            %trkID = FilteredTrackIDs(i);
+            trackData = ExpTrack{e,v}(1:10:end,[1,4,5]);
+            trackData(:,3) = imgSize(2) - trackData(:,3); 
+            
+            
+            for kk = 1:length(trackData)
+                t = round(min((trackData(kk,1)*(framePeriod/bioLumPeriod)),length(bioDatNorm) )); %Cam Frame Rate Vid To BiolUm ( PMT One here) bioLumPeriod/framePeriod 
+                mark = cmap(bioDatNorm(t),:); %Get the colour From the MAP corresponding to this biolum Value
+                scatter(trackData(kk,2),trackData(kk,3),50,mark);
+            end
+                scatter(trackData(1,2),trackData(1,3),150,'S'); %Start
+                l = size(trackData,1); %Count Records
+               scatter(trackData(l,2),trackData(l,3),250,'X'); %Start
+                colormap(cmap)
+                colorbar;
+
+            %lRec(i) = l;
+            scatter(trackData(l,2),trackData(l,3),'X') %Finish
+        %end
+%    end
+%end
+
+subplot(1,2,2)
+
+plot((1:1:length(biolum_mb247{dataIndex})).*bioLumPeriod/60,biolum_mb247{dataIndex})
+axis square
+title('BioLum Signal ');
+xlabel('minutes')
+
+cd(strOutputDir)
+saveas(hf,sprintf('figures/VialTracklets%s.png',strOutputTag));
+
+
+
+%%  PLOT Filtered Tracks - Needs Checking
+
+t= 1; 
 ExpTrackResults = ExpTrackResultsInTime{t};
 
 % NOTE: Y values are inverted since 0 Point in plot as at the bottom
-imgSize = [1024,768];
+imgSize = [640,480];
 colour = {'r','m','k','c','b','g','k','--r','--m','--k','--c','--b','--g','--k','-r','-k','-g'};
 hf = figure('Name',sprintf('Tracks at t=%d-%d hours',goToHour,goToHour+TimeFrameWidth/3600));
 xlim([0 imgSize(1)]);
@@ -152,34 +228,36 @@ hold on;
 
 e = 1;
 MinLifetime = 0;
-for e=1:size(ExpTrackResults,1)
-    for (v=1:size(ExpTrackResults,2))
-        
+%for e=1:size(ExpTrackResultsInTime,1)
+%    for (v=1:size(ExpTrackResultsInTime,2))
+  e = 1;
+  v = 1;
         %FilteredTrackIDs = unique(ExpTrackResults{e,v}( find(ExpTrackResults{e,v}(:,6)>MinLifetime),2 ));
         %find(vertcat(ExpTrackResults{e,v}.PointCount) > 6)
         %trackN = length(FilteredTrackIDs);
-        trackN = length(ExpTrackResults{e,v});
+        trackN = length(ExpTrackResultsInTime{e,v});
         for (i=1:1:trackN)
             %trkID = FilteredTrackIDs(i);
-            trackData = ExpTrackResults{e,v}(i).Positions;
+            if isempty(ExpTrackResultsInTime{e,v}{i})
+                continue;
+            end
+            trackData = ExpTrackResultsInTime{e,v}{i}.Positions;
             trackData(:,3) = imgSize(2) - trackData(:,3); 
             mark = colour{randi(17)};
-            plot(trackData(:,2),trackData(:,3),mark);
-            scatter(trackData(1,2),trackData(1,3),'.'); %Start
+            scatter(trackData(:,2),trackData(:,3),50,'o');
+            scatter(trackData(1,2),trackData(1,3),60,'S'); %Start
             l = size(trackData,1); %Count Records
 
             %lRec(i) = l;
-            scatter(trackData(l,2),trackData(l,3),'X') %Finsih
+            scatter(trackData(l,2),trackData(l,3),60,'X') %Finish
         end
-    end
-end
+%    end
+%end
 title('Plot Sample Track');
 saveas(hf,sprintf('figures/VialTracklets%s_t%d-%dHours.png',strOutputTag,goToHour,goToHour+TimeFrameWidth/3600));
 
 
 
-
-%% 
 % %Combine the vial Indexes
 % for (ConditionIndex=1:9)
 %     for (vi = 1:length(VialPairsPerCondition)) 
