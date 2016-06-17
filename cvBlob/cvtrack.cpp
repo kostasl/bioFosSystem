@@ -40,6 +40,7 @@ using namespace std;
 extern double gdLumRecfps;
 extern double gdvidfps;
 extern unsigned int gmaxLumValue;
+extern unsigned int gminLumValue;
 //extern std::vector<unsigned int> vLumRec;
 
 namespace cvb
@@ -465,6 +466,8 @@ namespace cvb
 
     CV_ASSERT(imgDest&&(imgDest->depth==IPL_DEPTH_8U)&&(imgDest->nChannels==3));
 
+
+
     if ((mode&CV_TRACK_RENDER_ID)&&(!font))
     {
       if (!defaultFont)
@@ -497,6 +500,8 @@ namespace cvb
   {
       CV_FUNCNAME("cvRenderTrack");
       __CV_BEGIN__;
+
+      int skipFrame = gdvidfps/gdLumRecfps; //Use Ratio of fps to calculate Frame Lag before drawing 1st track segment
 
         if (mode&CV_TRACK_RENDER_ID)
           if (!track.inactive)
@@ -543,9 +548,8 @@ namespace cvb
 
         //Render Path
         //cv::Mat img = cv::Mat::zeros(400, 400, CV_8UC3);
-        if (mode&CV_TRACK_RENDER_PATH)
+        if (mode&CV_TRACK_RENDER_PATH) //With BIOLUM COLOURED Values
         {
-            int skipFrame = gdvidfps/gdLumRecfps; //Use Ratio of fps to calculate Frame Lag before drawing 1st track segment
             int c1 ; //Colour R
             //std::vector<CvPoint>* pvec = &track.pointStack;
             //Lum Colour
@@ -555,7 +559,9 @@ namespace cvb
             //Draw each seg with colour
             for (int i=skipFrame;i < track.pointStack.size();i++)
             {
-                unsigned int vLumIndex = (unsigned int)(i/(double)skipFrame);
+
+                unsigned int vLumIndex  = (unsigned int)(i/(double)skipFrame);
+                double dnorm            = (double)(gmaxLumValue-gminLumValue);
                 //Make Sub vector Of Points that correspond to the same Lum Colour recording
                 std::vector<CvPoint>  vsubSeg(&track.pointStack[i-skipFrame],&track.pointStack[i]);
 
@@ -563,7 +569,7 @@ namespace cvb
                 int npts = cv::Mat(vsubSeg).rows;
 
                 if (vLumIndex < vLumRec.size() )
-                    c1 =  255.0*(double)vLumRec[vLumIndex]/(double)gmaxLumValue;
+                    c1 =  255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
                 else
                     c1 = 0;
 
@@ -574,6 +580,25 @@ namespace cvb
                                 CV_AA, 0);
             }
         }
+
+        if (mode & CV_TRACK_RENDER_LUM) ///Display Text of pixel Area
+        {
+            unsigned int vLumIndex  = (unsigned int)(track.pointStack.size()/(double)skipFrame);
+            unsigned int c1;
+            if (vLumIndex < vLumRec.size() )
+                c1 =  vLumRec[vLumIndex];
+            else
+                c1 = 0;
+
+
+            CvFont* font =  new CvFont;
+            cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.5, 0.5, 0, 1);
+            stringstream buffer;
+            buffer << c1;
+            cvPutText(imgDest, buffer.str().c_str(), cvPoint((int)track.centroid.x+10, (int)track.centroid.y-10), font, CV_RGB(60.,65.,220.));
+        }
+
+
 __CV_END__;
   }
 

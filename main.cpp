@@ -73,9 +73,10 @@ bool bMouseLButtonDown;
 //Bioluminescence Record
 QString infilename;
 std::vector<unsigned int> vLumRec; //Pointer to array of biolunim Data
-double gdLumRecfps = 0.5;
+double gdLumRecfps = 0.50; ///NEED TO ADJUST THIS TO The biolum Rec
 double gdvidfps = 20.0;
 unsigned int gmaxLumValue = 0;
+unsigned int gminLumValue = 0;
 
 //Area Filters
 double dMeanBlobArea = 10;
@@ -88,7 +89,7 @@ double dVarBlobArea = 50;
 const int MOGhistory        = 200;
 //Processing Loop delay
 uint cFrameDelayms    = 1;
-double dLearningRate        = 0.001;
+double dLearningRate        = 0.01;
 
 using namespace std;
 
@@ -109,9 +110,9 @@ int main(int argc, char *argv[])
     QString outfilename = QFileDialog::getSaveFileName(0, "Save tracks to output","VX_pos.csv", "CSV files (*.csv);", 0, 0); // getting the filename (full path)
 
     //outfilename.truncate(outfilename.lastIndexOf("."));
-    infilename = QFileDialog::getOpenFileName(0, "Select Biolum. record","/home/klagogia/Dropbox/Bioluminesce/biolum/dat/mb247xga", "CSV files (*.csv);; TXT files (*.txt);;", 0, 0); // getting the filename (full path)
+    infilename = QFileDialog::getOpenFileName(0, "Select Biolum. record","/home/klagogia/Dropbox/Bioluminesce/biolum/dat/mb247xga", " TXT files (*.txt);;CSV files (*.csv);;", 0, 0); // getting the filename (full path)
 
-    readBiolumFile(vLumRec, infilename, gmaxLumValue);
+    readBiolumFile(vLumRec, infilename, gmaxLumValue,gminLumValue);
     // get the applications dir pah and expose it to QML
     //engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
     //Init Font
@@ -119,7 +120,7 @@ int main(int argc, char *argv[])
 
     gTimer.start();
     //create GUI windows
-    string strwinName = "VialFrame";
+    string strwinName = "BioLumFrame";
     cv::namedWindow(strwinName,CV_WINDOW_NORMAL | CV_WINDOW_KEEPRATIO);
     //set the callback function for any mouse event
     cv::setMouseCallback(strwinName, CallBackFunc, NULL);
@@ -211,9 +212,11 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
     unsigned int nLarva         =  0;
     //Speed that stationary objects are removed
 
-    double dblRatioPxChanged    = 0.0;
+    double dblRatioPxChanged    = 0.0; //Used to Adjust Learning Rate
     unsigned int nFrame = startFrameCount; //Current Frame Number
 
+
+    std::string frameNumberString;
 
     //Make Variation of FileNames for other Output
     gstroutDirCSV = outFileCSV.left(outFileCSV.lastIndexOf("/"));
@@ -259,6 +262,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
             }
             else
             {
+                saveImage(frameNumberString,gstroutDirCSV,frameCpy); //Save Last Image Before Closing
                 std::cerr << "Unable to read next frame. So this video Is done." << std::endl;
                 cout << nFrame << " frames of Video processed. Move on to next timelapse video? " << endl;
                 break;
@@ -270,7 +274,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
         //If Mask shows that a large ratio of pixels is changing then - adjust learning rate to keep activity below 0.006
 
         if (nLarva > 1) //Added Count Limit (dblRatioPxChanged > 0.35 ||
-            dLearningRate = max(min(dLearningRate*1.00002,0.001),0.00);
+            dLearningRate = max(min(dLearningRate*1.02,0.001),0.00001);
         else if (nLarva < 1 || dMeanBlobArea < 300)//(nFrame > MOGhistory*2)
             dLearningRate = dLearningRate*0.98; //Exp Reduction
         else
@@ -294,11 +298,12 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
 
         //Put Info TextOn Frame
         //Frame Number
-        std::stringstream ss;
         cv::rectangle(frame, cv::Point(10, 2), cv::Point(100,20),
                   cv::Scalar(255,255,255), -1);
+
+        std::stringstream ss;
         ss << nFrame;
-        std::string frameNumberString = ss.str();
+        frameNumberString = ss.str();
         cv::putText(frame, frameNumberString.c_str(), cv::Point(15, 15),
                 cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
 
@@ -365,7 +370,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
 
 
         //show the current frame and the fg masks
-        cv::imshow("VialFrame", frame);
+        cv::imshow("BioLumFrame", frame);
 
         if (showMask)
         {
@@ -446,7 +451,7 @@ void checkPauseRun(int& keyboard,string frameNumberString)
 
 
             //if ((char)keyboard == 'c')
-            cv::imshow("VialFrame", frame);
+            cv::imshow("BioLumFrame", frame);
 
         }
 
@@ -586,8 +591,8 @@ int countObjectsviaBlobs(cv::Mat& srcimg,cvb::CvBlobs& blobs,cvb::CvTracks& trac
 
             if (iroi.contains(pnt))
             {
-                //cnt++;
-                cvb::cvRenderBlob(labelImg, blob, &fgMaskImg, &frameImg, CV_BLOB_RENDER_CENTROID|CV_BLOB_RENDER_BOUNDING_BOX | CV_BLOB_RENDER_COLOR | CV_BLOB_RENDER_AREA, cv::Scalar(0,200,0),0.6);
+                //cnt++; //CV_BLOB_RENDER_COLOR CV_BLOB_RENDER_AREA
+                cvb::cvRenderBlob(labelImg, blob, &fgMaskImg, &frameImg, CV_BLOB_RENDER_CENTROID|CV_BLOB_RENDER_BOUNDING_BOX, cv::Scalar(0,200,0),0.01);
             }
         }
 
@@ -600,7 +605,7 @@ int countObjectsviaBlobs(cv::Mat& srcimg,cvb::CvBlobs& blobs,cvb::CvTracks& trac
 
 
             if (iroi.contains(pnt))
-                cvRenderTrack(*((*it).second),vLumRec ,it->first ,  &fgMaskImg, &frameImg, CV_TRACK_RENDER_ID | CV_TRACK_RENDER_PATH,&trackFnt );
+                cvRenderTrack(*((*it).second),vLumRec ,it->first ,  &fgMaskImg, &frameImg, CV_TRACK_RENDER_ID | CV_TRACK_RENDER_PATH | CV_TRACK_RENDER_LUM,&trackFnt );
 
 
         }
@@ -824,10 +829,11 @@ int saveTracks(cvb::CvTracks& tracks,QString filename,std::string frameNumber)
 }
 
 
-unsigned int readBiolumFile(std::vector<unsigned int> &vBioLumRec,QString filename,unsigned int& imaxValue)
+unsigned int readBiolumFile(std::vector<unsigned int> &vBioLumRec,QString filename,unsigned int& imaxValue,unsigned int& iminValue)
 {
 
      imaxValue = 0;
+     iminValue = 0;
      unsigned int irecCount=0;
 
      unsigned int isample;
@@ -854,6 +860,13 @@ unsigned int readBiolumFile(std::vector<unsigned int> &vBioLumRec,QString filena
             //Rec Max Value
             if (imaxValue < isample)
                 imaxValue = isample;
+
+            //Rec Min Value
+            if (iminValue > isample)
+                iminValue = isample;
+
+
+
         }
     }
 

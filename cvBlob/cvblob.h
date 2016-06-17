@@ -406,13 +406,15 @@ extern "C" {
   /// \see cvRenderBlob
   void cvSaveImageBlob(const char *filename, IplImage *img, CvBlob const *blob);
   
+
 #define CV_BLOB_RENDER_COLOR            0x0001 ///< Render each blog with a different color. \see cvRenderBlobs
 #define CV_BLOB_RENDER_CENTROID         0x0002 ///< Render centroid. \see cvRenderBlobs
 #define CV_BLOB_RENDER_BOUNDING_BOX     0x0004 ///< Render bounding box. \see cvRenderBlobs
-#define CV_BLOB_RENDER_ANGLE            0x0008 ///< Render angle. \see cvRenderBlobs
-#define CV_BLOB_RENDER_TO_LOG           0x0010 ///< Print blob data to log out. \see cvRenderBlobs
-#define CV_BLOB_RENDER_TO_STD           0x0020 ///< Print blob data to std out. \see cvRenderBlobs
-#define CV_BLOB_RENDER_AREA             0x0100 ///<Print Area on Tracker screen
+#define CV_BLOB_RENDER_BOUNDING_BLOB    0x0008 ///Draw Over the Blob Showing all labeled Pixels
+#define CV_BLOB_RENDER_ANGLE            0x0010 ///< Render angle. \see cvRenderBlobs
+#define CV_BLOB_RENDER_TO_LOG           0x0020 ///< Print blob data to log out. \see cvRenderBlobs
+#define CV_BLOB_RENDER_TO_STD           0x0110 ///< Print blob data to std out. \see cvRenderBlobs
+#define CV_BLOB_RENDER_AREA             0x0120 ///<Print Area on Tracker screen
 
   /// \fn void cvRenderBlob(const IplImage *imgLabel, CvBlob *blob, IplImage *imgSource, IplImage *imgDest, unsigned short mode=0x000f, CvScalar const &color=CV_RGB(255, 255, 255), double alpha=1.)
   /// \brief Draws or prints information about a blob.
@@ -597,9 +599,10 @@ extern "C" {
 
 #define CV_TRACK_RENDER_ID            0x0001 ///< Print the ID of each track in the image. \see cvRenderTrack
 #define CV_TRACK_RENDER_BOUNDING_BOX  0x0002 ///< Draw bounding box of each track in the image. \see cvRenderTrack
-#define CV_TRACK_RENDER_TO_LOG        0x0010 ///< Print track info to log out. \see cvRenderTrack
-#define CV_TRACK_RENDER_TO_STD        0x0020 ///< Print track info to log out. \see cvRenderTrack
-#define CV_TRACK_RENDER_PATH          0x0100 ///< Draw polyline of track positions \see cvRenderTrack
+#define CV_TRACK_RENDER_TO_LOG        0x0004 ///< Print track info to log out. \see cvRenderTrack
+#define CV_TRACK_RENDER_TO_STD        0x0008 ///< Print track info to log out. \see cvRenderTrack
+#define CV_TRACK_RENDER_PATH          0x0010 ///< Draw polyline of track positions \see cvRenderTrack
+#define CV_TRACK_RENDER_LUM           0x0020 ///< Draw polyline of track positions \see cvRenderTrack
 
   /// \fn void cvRenderTracks(CvTracks const tracks, IplImage *imgSource, IplImage *imgDest, unsigned short mode=0x00ff, CvFont *font=NULL)
   /// \brief Prints tracks information.
