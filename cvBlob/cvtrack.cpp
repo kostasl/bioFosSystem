@@ -37,7 +37,9 @@ using namespace std;
 #include "opencv2/imgproc/imgproc.hpp" //Draw Polyline
 #include "cvblob.h"
 
-extern double fLumRecfps;
+extern double gdLumRecfps;
+extern double gdvidfps;
+extern unsigned int gmaxLumValue;
 //extern std::vector<unsigned int> vLumRec;
 
 namespace cvb
@@ -543,7 +545,7 @@ namespace cvb
         //cv::Mat img = cv::Mat::zeros(400, 400, CV_8UC3);
         if (mode&CV_TRACK_RENDER_PATH)
         {
-            int skipFrame = 2;//20.0/fLumRecfps;
+            int skipFrame = gdvidfps/gdLumRecfps; //Use Ratio of fps to calculate Frame Lag before drawing 1st track segment
             int c1 ; //Colour R
             //std::vector<CvPoint>* pvec = &track.pointStack;
             //Lum Colour
@@ -553,14 +555,15 @@ namespace cvb
             //Draw each seg with colour
             for (int i=skipFrame;i < track.pointStack.size();i++)
             {
+                unsigned int vLumIndex = (unsigned int)(i/(double)skipFrame);
                 //Make Sub vector Of Points that correspond to the same Lum Colour recording
                 std::vector<CvPoint>  vsubSeg(&track.pointStack[i-skipFrame],&track.pointStack[i]);
 
                 CvPoint *pts = (CvPoint*) cv::Mat(vsubSeg).data;
                 int npts = cv::Mat(vsubSeg).rows;
 
-                if (i < vLumRec.size() )
-                    c1 =  255.0*(double)vLumRec[i]/(double)maxLumValue;
+                if (vLumIndex < vLumRec.size() )
+                    c1 =  255.0*(double)vLumRec[vLumIndex]/(double)gmaxLumValue;
                 else
                     c1 = 0;
 

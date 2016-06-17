@@ -73,8 +73,9 @@ bool bMouseLButtonDown;
 //Bioluminescence Record
 QString infilename;
 std::vector<unsigned int> vLumRec; //Pointer to array of biolunim Data
-double fLumRecfps = 10.0;
-unsigned int maxLumValue = 0;
+double gdLumRecfps = 0.5;
+double gdvidfps = 20.0;
+unsigned int gmaxLumValue = 0;
 
 //Area Filters
 double dMeanBlobArea = 10;
@@ -110,7 +111,7 @@ int main(int argc, char *argv[])
     //outfilename.truncate(outfilename.lastIndexOf("."));
     infilename = QFileDialog::getOpenFileName(0, "Select Biolum. record","/home/klagogia/Dropbox/Bioluminesce/biolum/dat/mb247xga", "CSV files (*.csv);; TXT files (*.txt);;", 0, 0); // getting the filename (full path)
 
-    readBiolumFile(vLumRec, infilename, maxLumValue);
+    readBiolumFile(vLumRec, infilename, gmaxLumValue);
     // get the applications dir pah and expose it to QML
     //engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
     //Init Font
@@ -237,7 +238,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
 
     //create the capture object
     cv::VideoCapture capture(videoFilename.toStdString());
-    double vidfps = capture.get(CV_CAP_PROP_FPS);
+    gdvidfps = capture.get(CV_CAP_PROP_FPS);
 
     if(!capture.isOpened()){
         //error in opening the video input
