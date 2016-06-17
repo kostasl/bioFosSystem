@@ -45,6 +45,7 @@ int saveTracks(cvb::CvTracks& tracks,QString filename,std::string frameNumber);
 int saveTrackedBlobs(cvb::CvBlobs& blobs,QString filename,std::string frameNumber,cv::Rect& roi);
 int saveTrackedBlobsTotals(cvb::CvBlobs& blobs,cvb::CvTracks& tracks,QString filename,std::string frameNumber,cv::Rect& roi);
 
+unsigned int readBiolumFile(std::vector<unsigned int> &vBioLumRec,QString filename,unsigned int &imaxValue); ///Read The bioluminesce values and save them to provided vector
 
 void CallBackFunc(int event, int x, int y, int flags, void* userdata); //Mouse Callback
 

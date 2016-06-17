@@ -612,11 +612,11 @@ extern "C" {
   /// \see CV_TRACK_RENDER_BOUNDING_BOX
   /// \see CV_TRACK_RENDER_TO_LOG
   /// \see CV_TRACK_RENDER_TO_STD
-  void cvRenderTracks(CvTracks const tracks, IplImage *imgSource, IplImage *imgDest, unsigned short mode=0x000f, CvFont *font=NULL);
+  void cvRenderTracks(CvTracks const tracks,std::vector<unsigned int>& vLumRec, IplImage *imgSource, IplImage *imgDest, unsigned short mode=0x000f, CvFont *font=NULL);
 
   /// \fn void cvRenderTrack(CvTrack& track, IplImage *imgSource, IplImage *imgDest, unsigned short mode, CvFont *font );
   /// \brief Prints Single Track info
-  void cvRenderTrack(CvTrack& track,CvID trackID, IplImage *imgSource, IplImage *imgDest, unsigned short mode, CvFont *font );
+  void cvRenderTrack(CvTrack& track,std::vector<unsigned int>& vLumRec,CvID trackID, IplImage *imgSource, IplImage *imgDest, unsigned short mode, CvFont *font );
 
   ///\fn getClusterForTrack(unsigned int trackPos, CvID *close, unsigned int nBlobs, unsigned int nTracks, CvBlobs const &blobs, CvTracks const &tracks, list<CvBlob*> &bb, list<CvTrack*> &tt);
   /// \brief KL found this prototype in cvtrack.cpp - moved it to header - not sure what it does.

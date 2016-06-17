@@ -37,6 +37,9 @@ using namespace std;
 #include "opencv2/imgproc/imgproc.hpp" //Draw Polyline
 #include "cvblob.h"
 
+extern double fLumRecfps;
+//extern std::vector<unsigned int> vLumRec;
+
 namespace cvb
 {
 
@@ -453,7 +456,7 @@ namespace cvb
 
   CvFont *defaultFont = NULL;
 
-  void cvRenderTracks(CvTracks const tracks, IplImage *imgSource, IplImage *imgDest, unsigned short mode, CvFont *font )
+  void cvRenderTracks(CvTracks const tracks,std::vector<unsigned int>& vLumRec, IplImage *imgSource, IplImage *imgDest, unsigned short mode, CvFont *font )
   {
     CV_FUNCNAME("cvRenderTracks");
     __CV_BEGIN__;
@@ -480,7 +483,7 @@ namespace cvb
     {
         for (CvTracks::const_iterator it=tracks.begin(); it!=tracks.end(); ++it)
         {
-            cvRenderTrack(*((*it).second) ,it->first , imgSource, imgDest, mode, font );
+            cvRenderTrack(*((*it).second),vLumRec ,it->first , imgSource, imgDest, mode, font );
         }
     }
 
@@ -488,7 +491,7 @@ namespace cvb
   }
 
 
-  void cvRenderTrack(CvTrack& track,const unsigned int trackID, IplImage *imgSource, IplImage *imgDest, unsigned short mode, CvFont *font )
+  void cvRenderTrack(CvTrack& track,std::vector<unsigned int>& vLumRec, const unsigned int trackID, IplImage *imgSource, IplImage *imgDest, unsigned short mode, CvFont *font )
   {
       CV_FUNCNAME("cvRenderTrack");
       __CV_BEGIN__;
@@ -540,18 +543,33 @@ namespace cvb
         //cv::Mat img = cv::Mat::zeros(400, 400, CV_8UC3);
         if (mode&CV_TRACK_RENDER_PATH)
         {
-            std::vector<CvPoint>* pvec = &track.pointStack;
-            CvPoint *pts = (CvPoint*) cv::Mat(track.pointStack).data;
-            int npts = cv::Mat(track.pointStack).rows;
-            //Random colour
-            int c1 =  rand() % 200 + 30;
-            int c2 =  rand() % 200 + 30;
-            int c3 =  rand() % 200 + 30;
-            cvPolyLine(imgDest, &pts,&npts, 1,
-                            false, 			// draw open contour (i.e. joint end to start)
-                            cv::Scalar(c1,c2,c3),// colour RGB ordering (here = green)
-                            1, 		        // line thickness
-                            CV_AA, 0);
+            int skipFrame = 2;//20.0/fLumRecfps;
+            int c1 ; //Colour R
+            //std::vector<CvPoint>* pvec = &track.pointStack;
+            //Lum Colour
+
+            //int c2 =  rand() % 200 + 30;
+            //int c3 =  rand() % 200 + 30;
+            //Draw each seg with colour
+            for (int i=skipFrame;i < track.pointStack.size();i++)
+            {
+                //Make Sub vector Of Points that correspond to the same Lum Colour recording
+                std::vector<CvPoint>  vsubSeg(&track.pointStack[i-skipFrame],&track.pointStack[i]);
+
+                CvPoint *pts = (CvPoint*) cv::Mat(vsubSeg).data;
+                int npts = cv::Mat(vsubSeg).rows;
+
+                if (i < vLumRec.size() )
+                    c1 =  255.0*(double)vLumRec[i]/(double)maxLumValue;
+                else
+                    c1 = 0;
+
+                   cvPolyLine(imgDest, &pts,&npts, 1,
+                                false, 			// draw open contour (i.e. joint end to start)
+                                cv::Scalar(40,40,c1),// colour GBR ordering (here = green)
+                                1, 		        // line thickness
+                                CV_AA, 0);
+            }
         }
 __CV_END__;
   }

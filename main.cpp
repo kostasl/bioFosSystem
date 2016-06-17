@@ -70,6 +70,11 @@ bool bSaveImages = false;
 bool b1stPointSet;
 bool bMouseLButtonDown;
 
+//Bioluminescence Record
+QString infilename;
+std::vector<unsigned int> vLumRec; //Pointer to array of biolunim Data
+double fLumRecfps = 10.0;
+unsigned int maxLumValue = 0;
 
 //Area Filters
 double dMeanBlobArea = 10;
@@ -87,6 +92,7 @@ double dLearningRate        = 0.001;
 using namespace std;
 
 
+
 int main(int argc, char *argv[])
 {
     bROIChanged = false;
@@ -101,6 +107,10 @@ int main(int argc, char *argv[])
     //outfilename.truncate(outfilename.lastIndexOf("."));
     QString outfilename = QFileDialog::getSaveFileName(0, "Save tracks to output","VX_pos.csv", "CSV files (*.csv);", 0, 0); // getting the filename (full path)
 
+    //outfilename.truncate(outfilename.lastIndexOf("."));
+    infilename = QFileDialog::getOpenFileName(0, "Select Biolum. record","/home/klagogia/Dropbox/Bioluminesce/biolum/dat/mb247xga", "CSV files (*.csv);; TXT files (*.txt);;", 0, 0); // getting the filename (full path)
+
+    readBiolumFile(vLumRec, infilename, maxLumValue);
     // get the applications dir pah and expose it to QML
     //engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
     //Init Font
@@ -227,6 +237,8 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
 
     //create the capture object
     cv::VideoCapture capture(videoFilename.toStdString());
+    double vidfps = capture.get(CV_CAP_PROP_FPS);
+
     if(!capture.isOpened()){
         //error in opening the video input
         std::cerr << "Unable to open video file: " << videoFilename.toStdString() << std::endl;
@@ -256,7 +268,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
 
         //If Mask shows that a large ratio of pixels is changing then - adjust learning rate to keep activity below 0.006
 
-        if (nLarva > 2) //Added Count Limit (dblRatioPxChanged > 0.35 ||
+        if (nLarva > 1) //Added Count Limit (dblRatioPxChanged > 0.35 ||
             dLearningRate = max(min(dLearningRate*1.00002,0.001),0.00);
         else if (nLarva < 1 || dMeanBlobArea < 300)//(nFrame > MOGhistory*2)
             dLearningRate = dLearningRate*0.98; //Exp Reduction
@@ -587,7 +599,7 @@ int countObjectsviaBlobs(cv::Mat& srcimg,cvb::CvBlobs& blobs,cvb::CvTracks& trac
 
 
             if (iroi.contains(pnt))
-                cvRenderTrack(*((*it).second) ,it->first ,  &fgMaskImg, &frameImg, CV_TRACK_RENDER_ID | CV_TRACK_RENDER_PATH,&trackFnt );
+                cvRenderTrack(*((*it).second),vLumRec ,it->first ,  &fgMaskImg, &frameImg, CV_TRACK_RENDER_ID | CV_TRACK_RENDER_PATH,&trackFnt );
 
 
         }
@@ -809,6 +821,45 @@ int saveTracks(cvb::CvTracks& tracks,QString filename,std::string frameNumber)
    } //Loop ROI
      return cnt;
 }
+
+
+unsigned int readBiolumFile(std::vector<unsigned int> &vBioLumRec,QString filename,unsigned int& imaxValue)
+{
+
+     imaxValue = 0;
+     unsigned int irecCount=0;
+
+     unsigned int isample;
+     QString ssample;
+
+     QFile data(filename);
+     if (!data.exists())
+     {
+         cerr << "Could not open bioLum File" << endl;
+         exit(1);
+     }
+
+    if(data.open(QFile::ReadOnly))
+    {
+        QTextStream input(&data);
+
+        while (!input.atEnd()) //Read In All Lines And copy values into Vector
+        {
+            irecCount++; //Convert Text Num to int
+            input >> ssample;
+            isample = ssample.toUInt();
+            vBioLumRec.push_back(isample);
+
+            //Rec Max Value
+            if (imaxValue < isample)
+                imaxValue = isample;
+        }
+    }
+
+return irecCount;
+}
+
+
 //Mouse Call Back Function
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 {

@@ -1,5 +1,3 @@
-#Good to have compiled opencv with qt support so the window can autoresize.
-
 TEMPLATE = app
 
 QT += qml quick widgets gui
@@ -14,18 +12,33 @@ SOURCES += main.cpp \
     cvBlob/cvaux.cpp
 
 RESOURCES += qml.qrc
-INCLUDEPATH += /usr/include/opencv
+
+INCLUDEPATH +=/home/klagogia/opencv-3.0.0-installed/include/opencv2 \
+                /home/klagogia/opencv-3.0.0-installed/include \
+                /home/klagogia/opencv-3.0.0-installed/include/opencv
+
+#INCLUDEPATH += /usr/local/include/opencv2
 #INCLUDEPATH += /usr/include/cvblob
 
 #INCLUDEPATH += /home/kostasl/workspace/cvblobLib
-#`pkg-config opencv cvblob --cflags`
+#INCLUDEPATH +=`pkg-config opencv qt --cflags`
 ##Figure out VERSION : pkg-config --modversion opencv
 ##Or Check CV_MAJOR_VERSION, CV_MINOR_VERSION
 
 
-LIBS += `pkg-config opencv --libs`
-#LIBS += -L/usr/local/lib -lcvblob
-#LIBS += -L/home/kostasl/workspace -lcvblob
+#LIBS += `pkg-config opencv --libs`
+LIBS += -L/home/klagogia/opencv-3.0.0-installed/lib \
+            -lopencv_core \
+            -lopencv_highgui \
+            -lopencv_imgproc \
+            -lopencv_features2d\
+            -lopencv_video \
+            -lopencv_videoio \
+            -lopencv_imgcodecs
+
+LIBS += -L/home/kostasl/workspace -lcvblob
+LIBS += -L/home/klagogia/workspace/larvaltrack_Deploy/libs -lcudart
+
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
 ##
