@@ -233,7 +233,7 @@ namespace cvb
         {
           CvTrack* t = T(j); //Fetch The blob to examine ROI
           CvBlob* b = B(i); //Fetch The blob to examine ROI
-          C(i, j) = distantBlobTrack(b,t) < min( 2*(t->effectiveDisplacement+5),3*thDistance);
+          C(i, j) = distantBlobTrack(b,t) < min( 2.0*(t->effectiveDisplacement+thDistance/2.0),3*thDistance);
           //if (C(i, j) < thDistance  ) //< thDistance (t->effectiveDisplacement + 5)
           if(C(i, j))
           {
@@ -573,9 +573,11 @@ namespace cvb
                 else
                     c1 = 0;
 
-                   cvPolyLine(imgDest, &pts,&npts, 1,
+                cv::Scalar cvcolour(20,255-c1,c1);
+
+                cvPolyLine(imgDest, &pts,&npts, 1,
                                 false, 			// draw open contour (i.e. joint end to start)
-                                cv::Scalar(40,40,c1),// colour GBR ordering (here = green)
+                                cvcolour,// colour GBR ordering (here = green)
                                 1, 		        // line thickness
                                 CV_AA, 0);
             }
