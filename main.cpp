@@ -330,16 +330,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
         cv::putText(frame, buff, cv::Point(15, 63),
                 cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
 
-        //Time Rate - conv from ms to minutes
-
-        std::sprintf(buff,"t: %0.2f",gTimer.elapsed()/(1000.0*60.0) );
-        //strTimeElapsed << "" <<  << " m";
-        cv::rectangle(frame, cv::Point(10, 75), cv::Point(100,95), cv::Scalar(255,255,255), -1);
-        cv::putText(frame, buff, cv::Point(15, 88),
-                cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
-
-        //Count Area Pixels // Ratio
-        dblRatioPxChanged = (double)cv::countNonZero(fgMaskMOG2)/(double)fgMaskMOG2.size().area();
+        ///Show Biolum. PMT value of current Frame
 
         //Write Lum Value To Screen
         int skipFrame = gdvidfps/gdLumRecfps; //Use Ratio of fps to calculate Frame Lag before drawing 1st track segment
@@ -352,9 +343,19 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
 
         stringstream buffer;
         buffer << "Lum:" <<  c1;
-        cv::rectangle(frame, cv::Point(10, 100), cv::Point(100,120), cv::Scalar(255,255,255), -1);
-        cv::putText(frame, buffer.str().c_str(), cv::Point(15, 113),
-                cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
+        cv::rectangle(frame, cv::Point(10, 75), cv::Point(100,95), cv::Scalar(255,255,255), -1);
+        cv::putText(frame, buffer.str().c_str(),cv::Point(15, 88),
+                    cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
+
+        //REMOVED/Time Rate - conv from ms to minutes
+//        std::sprintf(buff,"t: %0.2f",gTimer.elapsed()/(1000.0*60.0) );
+//        //strTimeElapsed << "" <<  << " m";
+//        cv::rectangle(frame, cv::Point(10, 100), cv::Point(100,120), cv::Scalar(255,255,255), -1);
+//        cv::putText(frame, buff.c_str(), cv::Point(15, 113),
+//                cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
+
+        //Count Area Pixels // Ratio
+        dblRatioPxChanged = (double)cv::countNonZero(fgMaskMOG2)/(double)fgMaskMOG2.size().area();
 
 
 
