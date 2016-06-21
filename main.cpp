@@ -22,7 +22,9 @@
  ///*
  ///*  Dependencies : opencv3
  ///*
- /// TODO: Detect stopped Larva - either pupating or stuck
+ /// 17/6 forked from larvatrack to make Bioluminescence Tracker
+ ///  TODO: video 1515 shows a larva that goes untracked for a while and Track Disappears -
+ ///     * Ideally I should draw track lines on a img that is maintained and overlayed on the main frame - So to avoid slow downs
  ////////
 
 
@@ -73,8 +75,10 @@ bool bMouseLButtonDown;
 //Bioluminescence Record
 QString infilename;
 std::vector<unsigned int> vLumRec; //Pointer to array of biolunim Data
-double gdLumRecfps = 0.50; ///NEED TO ADJUST THIS TO The biolum Rec
+double gdLumRecfps = 10.0; ///NEED TO ADJUST THIS TO The biolum Rec
 double gdvidfps = 20.0;
+unsigned int nFrame;
+
 unsigned int gmaxLumValue = 0;
 unsigned int gminLumValue = 0;
 
@@ -108,9 +112,12 @@ int main(int argc, char *argv[])
 
     //outfilename.truncate(outfilename.lastIndexOf("."));
     QString outfilename = QFileDialog::getSaveFileName(0, "Save tracks to output","VX_pos.csv", "CSV files (*.csv);", 0, 0); // getting the filename (full path)
+    QString outDir = outfilename.left(outfilename.lastIndexOf('/') ).toStdString().c_str();
+    cout << "Csv Output Dir is " << outDir.toStdString()  << "\n " <<  endl;
 
     //outfilename.truncate(outfilename.lastIndexOf("."));
-    infilename = QFileDialog::getOpenFileName(0, "Select Biolum. record","/home/klagogia/Dropbox/Bioluminesce/biolum/dat/mb247xga", " TXT files (*.txt);;CSV files (*.csv);;", 0, 0); // getting the filename (full path)
+    infilename = QFileDialog::getOpenFileName(0, "Select Biolum. record",outDir.toStdString().c_str() , " TXT files (*.txt);;CSV files (*.csv);;", 0, 0); // getting the filename (full path)
+
 
     readBiolumFile(vLumRec, infilename, gmaxLumValue,gminLumValue);
     // get the applications dir pah and expose it to QML
@@ -157,7 +164,7 @@ int main(int argc, char *argv[])
 
     QString invideoname = "*.mpg";
     unsigned int istartFrame = 0;
-    QStringList invideonames =QFileDialog::getOpenFileNames(0, "Select timelapse video to Process", qApp->applicationDirPath(), "Video file (*.mpg *.avi *.mp4 *.h264 *.mov)", 0, 0);
+    QStringList invideonames =QFileDialog::getOpenFileNames(0, "Select timelapse video to Process", outDir.toStdString().c_str(), "Video file (*.mpg *.avi *.mp4 *.h264 *.mov)", 0, 0);
 
     //Show Video list to process
     cout << "Video List To process:" << endl;
@@ -213,7 +220,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
     //Speed that stationary objects are removed
 
     double dblRatioPxChanged    = 0.0; //Used to Adjust Learning Rate
-    unsigned int nFrame = startFrameCount; //Current Frame Number
+     nFrame = startFrameCount; //Current Frame Number
 
 
     std::string frameNumberString;
@@ -331,13 +338,25 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
         cv::putText(frame, buff, cv::Point(15, 88),
                 cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
 
-        //Count Fg Pixels // Ratio
-        std::stringstream strFGPxRatio;
+        //Count Area Pixels // Ratio
         dblRatioPxChanged = (double)cv::countNonZero(fgMaskMOG2)/(double)fgMaskMOG2.size().area();
-        strFGPxRatio << "mA:" <<  dMeanBlobArea;
+
+        //Write Lum Value To Screen
+        int skipFrame = gdvidfps/gdLumRecfps; //Use Ratio of fps to calculate Frame Lag before drawing 1st track segment
+        unsigned int vLumIndex  = (unsigned int)(nFrame/(double)skipFrame);
+        unsigned int c1;
+        if (vLumIndex < vLumRec.size() )
+            c1 =  vLumRec[vLumIndex];
+        else
+            c1 = 0;
+
+        stringstream buffer;
+        buffer << "Lum:" <<  c1;
         cv::rectangle(frame, cv::Point(10, 100), cv::Point(100,120), cv::Scalar(255,255,255), -1);
-        cv::putText(frame, strFGPxRatio.str(), cv::Point(15, 113),
+        cv::putText(frame, buffer.str().c_str(), cv::Point(15, 113),
                 cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
+
+
 
         //Hold A copy of Frame With all txt
         frame.copyTo(frameCpy);
@@ -357,11 +376,11 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
 
             //ROI with TRACKs Fails
             const int inactiveFrameCount = 10000; //Number of frames inactive until track is deleted
-            const int thActive = 2;// If a track becomes inactive but it has been active less than thActive frames, the track will be deleted.
+            const int thActive = 5;// If a track becomes inactive but it has been active less than thActive frames, the track will be deleted.
 
             //Tracking has Bugs when it involves Setting A ROI. SEG-FAULTS
             //thDistance = 22 //Distance from Blob to track
-            int thDistance = 80;
+            int thDistance = 40;
             cvb::cvUpdateTracks(blobs,tracks,vRoi, thDistance, inactiveFrameCount,thActive);
             saveTracks(tracks,trkoutFileCSV,frameNumberString);
 

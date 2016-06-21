@@ -37,6 +37,7 @@ using namespace std;
 #include "opencv2/imgproc/imgproc.hpp" //Draw Polyline
 #include "cvblob.h"
 
+extern unsigned int nFrame;
 extern double gdLumRecfps;
 extern double gdvidfps;
 extern unsigned int gmaxLumValue;
@@ -429,23 +430,24 @@ namespace cvb
           }
         } //If c
       }// Loop Over nTracks (CLUSTERINg)
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-      //Erase Tracks that have been Inactive
-      for (CvTracks::iterator jt=tracks.begin(); jt!=tracks.end();)
-        if ((jt->second->inactive>=thInactive)||((jt->second->inactive)&&(thActive)&&(jt->second->active<thActive)))
-        {
-          delete jt->second;
-          tracks.erase(jt++);
-        }
-        else
-        {
-          jt->second->lifetime++;
-          if (!jt->second->inactive)
-            jt->second->active++;
-          ++jt;
-        }
-     } //Closes Huge Try block
+/// Removed - Erase Tracks that have been Inactive  - For BioLum Tracker
+//      for (CvTracks::iterator jt=tracks.begin(); jt!=tracks.end();)
+//        if ((jt->second->inactive>=thInactive)||((jt->second->inactive)&&(thActive)&&(jt->second->active<thActive)))
+//        {
+//          delete jt->second;
+//          tracks.erase(jt++);
+//        }
+//        else
+//        {
+//          jt->second->lifetime++;
+//          if (!jt->second->inactive)
+//            jt->second->active++;
+//          ++jt;
+//        }
+
+    } //Closes Huge Try block
         catch (...)
         {
           delete[] close;
@@ -551,6 +553,7 @@ namespace cvb
         if (mode&CV_TRACK_RENDER_PATH) //With BIOLUM COLOURED Values
         {
             int c1 ; //Colour R
+            int t1; //Line Thickness
             //std::vector<CvPoint>* pvec = &track.pointStack;
             //Lum Colour
 
@@ -580,25 +583,46 @@ namespace cvb
                                 cvcolour,// colour GBR ordering (here = green)
                                 1, 		        // line thickness
                                 CV_AA, 0);
+
+
+                if ((mode & CV_TRACK_RENDER_LUM) && (i % 500 == 0)) ///Display Text of Lum Value
+                {
+                    unsigned int vLumIndex  = (unsigned int)(i/(double)skipFrame);
+                    unsigned int c1;
+                    if (vLumIndex < vLumRec.size() )
+                        c1 =  vLumRec[vLumIndex];
+                    else
+                        c1 = 0;
+
+
+                    CvFont* font =  new CvFont;
+                    cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.3, 0.3, 0, 1);
+                    stringstream buffer;
+                    buffer << c1;
+                    cvPutText(imgDest, buffer.str().c_str(), CvPoint(vsubSeg[0].x + 5,vsubSeg[0].y + 5), font, cvcolour);
+                }
+
+
+
             }
         }
+           //Ony Render In Track
+//        if (mode & CV_TRACK_RENDER_LUM) ///Display Text of Lum Value
+//        {
+//            unsigned int vLumIndex  = (unsigned int)(track.pointStack.size()/(double)skipFrame);
+//            unsigned int c1;
+//            if (vLumIndex < vLumRec.size() )
+//                c1 =  vLumRec[vLumIndex];
+//            else
+//                c1 = 0;
 
-        if (mode & CV_TRACK_RENDER_LUM) ///Display Text of pixel Area
-        {
-            unsigned int vLumIndex  = (unsigned int)(track.pointStack.size()/(double)skipFrame);
-            unsigned int c1;
-            if (vLumIndex < vLumRec.size() )
-                c1 =  vLumRec[vLumIndex];
-            else
-                c1 = 0;
 
-
-            CvFont* font =  new CvFont;
-            cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.5, 0.5, 0, 1);
-            stringstream buffer;
-            buffer << c1;
-            cvPutText(imgDest, buffer.str().c_str(), cvPoint((int)track.centroid.x+10, (int)track.centroid.y-10), font, CV_RGB(60.,65.,220.));
-        }
+//            CvFont* font =  new CvFont;
+//            cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.5, 0.5, 0, 1);
+//            stringstream buffer;
+//            buffer << c1;
+//            cvPutText(imgDest, buffer.str().c_str(), cvPoint((int)track.centroid.x+10, (int)track.centroid.y-10), font, CV_RGB(60.,65.,220.));
+//        }
 
 
 __CV_END__;
