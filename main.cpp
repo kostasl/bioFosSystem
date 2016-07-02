@@ -285,7 +285,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
         if (nLarva > 1) //Added Count Limit (dblRatioPxChanged > 0.35 ||
             dLearningRate = max(min(dLearningRate*1.02,0.001),0.00001);
         else if (nLarva < 1 || dMeanBlobArea < 300)//(nFrame > MOGhistory*2)
-            dLearningRate = dLearningRate*0.98; //Exp Reduction
+            dLearningRate = 0.00000001 + dLearningRate*0.98; //Exp Reduction
         else
             dLearningRate = 0.000001; //Default Value -  Forgets
 
@@ -440,10 +440,10 @@ void checkPauseRun(int& keyboard,string frameNumberString)
         cFrameDelayms++;
 
     if ((char)keyboard == '[') //Half Contrast
-        dContrast =dContrast/2.0;
+        dContrast =dContrast*0.90;
 
     if ((char)keyboard == ']') //Double Contrast
-        dContrast =dContrast*2.0;
+        dContrast =dContrast*1.1;
 
 
 
