@@ -37,7 +37,9 @@ LIBS += -L/home/klagogia/opencv-3.0.0-installed/lib \
             -lopencv_imgcodecs
 
 LIBS += -L/home/kostasl/workspace -lcvblob
-LIBS += -L/home/klagogia/workspace/larvaltrack_Deploy/libs -lcudart
+LIBS += -L/usr/local/cuda-7.5/targets/x86_64-linux/lib/ -lcudart #Necessary BS. cause linker looks for  and cudart.7.5 (installed)
+LIBS += -L/home/klagogia/workspace/build-larvaltrack-Desktop-Release/libs/ -lcudart # cudart.7.0(not installed)
+#LIBS += -L/usr/local/cuda-7.5/lib64/ -lcudart
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =

@@ -75,9 +75,11 @@ bool bMouseLButtonDown;
 //Bioluminescence Record
 QString infilename;
 std::vector<unsigned int> vLumRec; //Pointer to array of biolunim Data
-double gdLumRecfps = 10.0; ///NEED TO ADJUST THIS TO The biolum Rec
+double gdLumRecfps = 0.5; ///NEED TO ADJUST THIS TO The biolum Rec either 10, or 0.5
 double gdvidfps = 20.0;
 unsigned int nFrame;
+double  dContrast = 1.0; //Allows changing the contrast
+
 
 unsigned int gmaxLumValue = 0;
 unsigned int gminLumValue = 0;
@@ -290,6 +292,8 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
 
         //update the background model
         //OPEN CV 2.4
+        frame.convertTo(frame, -1, dContrast, 0); //increase Contrast
+
         pMOG2->apply(frame, fgMaskMOG2,dLearningRate);
         //OPENCV 3
 //        pMOG->operator()(frame, fgMaskMOG2,dLearningRate);
@@ -435,6 +439,11 @@ void checkPauseRun(int& keyboard,string frameNumberString)
     if ((char)keyboard == '-')
         cFrameDelayms++;
 
+    if ((char)keyboard == '[') //Half Contrast
+        dContrast =dContrast/2.0;
+
+    if ((char)keyboard == ']') //Double Contrast
+        dContrast =dContrast*2.0;
 
 
 
