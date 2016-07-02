@@ -282,7 +282,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
 
         //If Mask shows that a large ratio of pixels is changing then - adjust learning rate to keep activity below 0.006
 
-        if (nLarva > 1) //Added Count Limit (dblRatioPxChanged > 0.35 ||
+        if (nLarva > 1 || dblRatioPxChanged > 0.15) //Added Count Limit (dblRatioPxChanged > 0.35 ||
             dLearningRate = max(min(dLearningRate*1.02,0.001),0.00001);
         else if (nLarva < 1 || dMeanBlobArea < 300)//(nFrame > MOGhistory*2)
             dLearningRate = 0.00000001 + dLearningRate*0.98; //Exp Reduction
@@ -440,10 +440,16 @@ void checkPauseRun(int& keyboard,string frameNumberString)
         cFrameDelayms++;
 
     if ((char)keyboard == '[') //Half Contrast
-        dContrast =dContrast*0.90;
+    {
+        dContrast =dContrast*0.95;
+        dLearningRate = 0.0001;
+    }
 
     if ((char)keyboard == ']') //Double Contrast
-        dContrast =dContrast*1.1;
+    {
+        dContrast =dContrast*1.05;
+        dLearningRate = 0.001;//Reset Learning Rate to high / due to img change
+    }
 
 
 
