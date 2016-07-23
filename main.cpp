@@ -75,27 +75,27 @@ bool bMouseLButtonDown;
 //Bioluminescence Record
 QString infilename;
 std::vector<unsigned int> vLumRec; //Pointer to array of biolunim Data
-double gdLumRecfps = 0.5; ///NEED TO ADJUST THIS TO The biolum Rec either 10, or 0.5
-double gdvidfps = 20.0;
+double gdLumRecfps = 10.0; ///NEED TO ADJUST THIS TO The biolum Rec either 10, or 0.5
+double gdvidfps = 13.0;
 unsigned int nFrame;
 double  dContrast = 1.0; //Allows changing the contrast
 
 
-unsigned int gmaxLumValue = 0;
-unsigned int gminLumValue = 0;
+unsigned int gmaxLumValue = 80;
+unsigned int gminLumValue = 10;
 
 //Area Filters
 double dMeanBlobArea = 10;
 double dVarBlobArea = 50;
 
 #define LOW_LOWERBOUND_BLOB_AREA 60.0
-#define LOW_UPPERBOUND_BLOB_AREA 1200.0
+#define LOW_UPPERBOUND_BLOB_AREA 1500.0
 
 //BG History
-const int MOGhistory        = 200;
+const int MOGhistory        = 100;
 //Processing Loop delay
 uint cFrameDelayms    = 1;
-double dLearningRate        = 0.01;
+double dLearningRate        = 0.005;
 
 using namespace std;
 
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 
 
     //outfilename.truncate(outfilename.lastIndexOf("."));
-    QString outfilename = QFileDialog::getSaveFileName(0, "Save tracks to output","VX_pos.csv", "CSV files (*.csv);", 0, 0); // getting the filename (full path)
+    QString outfilename = QFileDialog::getSaveFileName(0, "Save tracks to output","/media/klagogia/Seagate Expansion Drive/Bioluminesce/biolum/dat/vIds/KC201Y/VX_pos.csv", "CSV files (*.csv);", 0, 0); // getting the filename (full path)
     QString outDir = outfilename.left(outfilename.lastIndexOf('/') ).toStdString().c_str();
     cout << "Csv Output Dir is " << outDir.toStdString()  << "\n " <<  endl;
 
@@ -121,7 +121,10 @@ int main(int argc, char *argv[])
     infilename = QFileDialog::getOpenFileName(0, "Select Biolum. record",outDir.toStdString().c_str() , " TXT files (*.txt);;CSV files (*.csv);;", 0, 0); // getting the filename (full path)
 
 
-    readBiolumFile(vLumRec, infilename, gmaxLumValue,gminLumValue);
+    unsigned int minfileLum;
+    unsigned int maxfileLum;
+    readBiolumFile(vLumRec, infilename, maxfileLum,minfileLum);
+    cout << "Lum Record has min:" << minfileLum << " max:" << maxfileLum << endl;
     // get the applications dir pah and expose it to QML
     //engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
     //Init Font

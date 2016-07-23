@@ -576,16 +576,20 @@ namespace cvb
                 else
                     c1 = 0;
 
-                cv::Scalar cvcolour(20,255-c1,c1);
+                cv::Scalar cvcolour(20,max(255-c1,0),min(c1,255));
 
-                cvPolyLine(imgDest, &pts,&npts, 1,
+                /*cvPolyLine(imgDest, &pts,&npts, 1,
                                 false, 			// draw open contour (i.e. joint end to start)
                                 cvcolour,// colour GBR ordering (here = green)
-                                1, 		        // line thickness
-                                CV_AA, 0);
-
-
-                if ((mode & CV_TRACK_RENDER_LUM) && (i % 500 == 0)) ///Display Text of Lum Value
+                                2, 		        // line thickness
+                                CV_FILLED, 0);*/
+                /*cv::polylines(imgDest, &pts,&npts, 1,
+                              false, 			// draw open contour (i.e. joint end to start)
+                              cvcolour,// colour GBR ordering (here = green)
+                              2, 		        // line thickness
+                              CV_FILLED, 0);*/
+                cvLine(imgDest,track.pointStack[i-skipFrame],track.pointStack[i], cvcolour,1,CV_AA,0);
+                if ((mode & CV_TRACK_RENDER_LUM) && (i % 200 == 0)) ///Display Text of Lum Value
                 {
                     unsigned int vLumIndex  = (unsigned int)(i/(double)skipFrame);
                     unsigned int c1;
