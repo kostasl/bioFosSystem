@@ -83,7 +83,7 @@ double  dContrast = 2.0; //Allows changing the contrast
 
 unsigned int gmaxLumValue = 1300;
 unsigned int gminLumValue = 400;
-
+unsigned int gframeLumValue = 0; //The lum value at the current video frame
 //Area Filters
 double dMeanBlobArea = 10;
 double dVarBlobArea = 50;
@@ -341,14 +341,14 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
         //Write Lum Value To Screen
         int skipFrame = gdvidfps/gdLumRecfps; //Use Ratio of fps to calculate Frame Lag before drawing 1st track segment
         unsigned int vLumIndex  = (unsigned int)(nFrame/(double)skipFrame);
-        unsigned int c1;
+
         if (vLumIndex < vLumRec.size() )
-            c1 =  vLumRec[vLumIndex];
+            gframeLumValue =  vLumRec[vLumIndex];
         else
-            c1 = 0;
+            gframeLumValue = 0;
 
         stringstream buffer;
-        buffer << "Lum:" <<  c1;
+        buffer << "Lum:" <<  gframeLumValue;
         cv::rectangle(frame, cv::Point(10, 75), cv::Point(100,95), cv::Scalar(255,255,255), -1);
         cv::putText(frame, buffer.str().c_str(),cv::Point(15, 88),
                     cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
@@ -961,6 +961,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
                     dmin = d;
                     cvTpicked = cvT;
                 }
+                std::cout << "Closest track dist:" << d << " min " << dmin <<  std::endl;
 
             }
             if (!cvTpicked) //NotNull
@@ -970,9 +971,9 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
                 tracks.insert(cvb::CvIDTrack(1, cvTpicked));
 
             }
-                cvT->pointStack.push_back(std::pair<cv::Point,int>(pntCentroid,1000)); //Add point to track
-                cvT->centroid.x = x; //Update Track Centroid to latest click
-                cvT->centroid.y = y;
+                cvTpicked->pointStack.push_back(std::pair<cv::Point,int>(pntCentroid,gframeLumValue)); //Add point to track
+                cvTpicked->centroid.x = x; //Update Track Centroid to latest click
+                cvTpicked->centroid.y = y;
 
         }
 
