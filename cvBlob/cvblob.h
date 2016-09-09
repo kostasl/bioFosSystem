@@ -514,7 +514,7 @@ extern "C" {
   /// \see CvPoint2D64f
   /// \see CvTrack
   /// \note For Biolum Best to change this to a pair <CvPoint,Int Biolum> to add biolum value at time ofpoint creation
-  typedef std::vector<CvPoint> CvTrackPoints;
+  typedef std::vector<std::pair<CvPoint,int> > CvTrackPoints;
 
 
   /// \brief Struct that contain information about one track.

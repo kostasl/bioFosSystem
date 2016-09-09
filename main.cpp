@@ -970,7 +970,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
                 tracks.insert(cvb::CvIDTrack(1, cvTpicked));
 
             }
-                cvT->pointStack.push_back(pntCentroid); //Add point to track
+                cvT->pointStack.push_back(std::pair<cv::Point,int>(pntCentroid,1000)); //Add point to track
                 cvT->centroid.x = x; //Update Track Centroid to latest click
                 cvT->centroid.y = y;
 

@@ -312,7 +312,7 @@ namespace cvb
 
 
           track->pROI = proi; //Set Pointer to ROI containing the 1st blob
-          track->pointStack.push_back(pntCentroid); //Add 1st Point to list of Track
+          track->pointStack.push_back(std::pair<cv::Point,int>(pntCentroid,1000)); //Add 1st Point to list of Track
           tracks.insert(CvIDTrack(maxTrackID, track));
         }
       } //END NEW Tracks
@@ -406,7 +406,7 @@ namespace cvb
                   track->effectiveDisplacement = 1.0 + round(sqrt( pow(track->centroid.x - blob->centroid.x,2) + pow( (track->centroid.y - blob->centroid.y),2)  )); // round(distantBlobTrack(blob,track)+0.5)
                   track->centroid = blob->centroid;
                   //KL: Make A point list
-                  track->pointStack.push_back(cv::Point(blob->centroid.x,blob->centroid.y)); //KL:Add The new point to the List
+                  track->pointStack.push_back(std::pair<cv::Point,int>(cv::Point(blob->centroid.x,blob->centroid.y),1000)); //KL:Add The new point to the List
 
                   track->minx = blob->minx;
                   track->miny = blob->miny;
@@ -570,7 +570,7 @@ namespace cvb
                 unsigned int vLumIndex  = (unsigned int)(i/(double)skipFrame);
                 double dnorm            = (double)(gmaxLumValue-gminLumValue);
                 //Make Sub vector Of Points that correspond to the same Lum Colour recording
-                std::vector<CvPoint>  vsubSeg(&track.pointStack[i-skipFrame],&track.pointStack[i]);
+                std::vector<CvPoint>  vsubSeg(&track.pointStack[i-skipFrame].first,&track.pointStack[i].first);
 
                 CvPoint *pts = (CvPoint*) cv::Mat(vsubSeg).data;
                 int npts = cv::Mat(vsubSeg).rows;
@@ -593,7 +593,7 @@ namespace cvb
                               2, 		        // line thickness
                               CV_FILLED, 0);*/
                 //cvLine(imgDest,track.pointStack[i-skipFrame],track.pointStack[i], cvcolour,1,CV_AA,0);
-                cvLine(imgDest,track.pointStack[i-1],track.pointStack[i], cvcolour,1,CV_AA,0);
+                cvLine(imgDest,track.pointStack[i-1].first,track.pointStack[i].first, cvcolour,1,CV_AA,0);
 
                 if ((mode & CV_TRACK_RENDER_LUM) && (i % TRACK_LUM_REPORT_INTERVAL == 0)) ///Display Text of Lum Value
                 {
