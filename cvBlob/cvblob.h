@@ -513,6 +513,7 @@ extern "C" {
   /// \brief stores the stacked List of past centroid points that define this track.
   /// \see CvPoint2D64f
   /// \see CvTrack
+  /// \note For Biolum Best to change this to a pair <CvPoint,Int Biolum> to add biolum value at time ofpoint creation
   typedef std::vector<CvPoint> CvTrackPoints;
 
 

@@ -1,7 +1,10 @@
+
+QT       += core gui
+
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+TARGET = larvatrack_biolum
 TEMPLATE = app
-
-QT += qml quick widgets gui
-
 
 SOURCES += main.cpp \
     cvBlob/cvtrack.cpp \
@@ -25,7 +28,7 @@ INCLUDEPATH +=/home/klagogia/opencv-3.0.0-installed/include/opencv2 \
 ##Figure out VERSION : pkg-config --modversion opencv
 ##Or Check CV_MAJOR_VERSION, CV_MINOR_VERSION
 
-
+#BEst to make opencv with flag WITH_CUDA=OFF
 #LIBS += `pkg-config opencv --libs`
 LIBS += -L/home/klagogia/opencv-3.0.0-installed/lib \
             -lopencv_core \
@@ -36,16 +39,18 @@ LIBS += -L/home/klagogia/opencv-3.0.0-installed/lib \
             -lopencv_videoio \
             -lopencv_imgcodecs
 
-LIBS += -L/home/kostasl/workspace -lcvblob
-LIBS += -L/usr/local/cuda-7.5/targets/x86_64-linux/lib/ -lcudart #Necessary BS. cause linker looks for  and cudart.7.5 (installed)
-LIBS += -L/home/klagogia/workspace/build-larvaltrack-Desktop-Release/libs/ -lcudart # cudart.7.0(not installed)
+LIBS += -L/usr/lib/x86_64-linux-gnu
+#LIBS += -L/usr/local/cuda-7.5/targets/x86_64-linux/lib/ -lcudart #Necessary BS. cause linker looks for  and cudart.7.5 (installed)
+#LIBS += -L/home/klagogia/workspace/build-larvaltrack-Desktop-Release/libs/ -lcudart # cudart.7.0(not installed)
 #LIBS += -L/usr/local/cuda-7.5/lib64/ -lcudart
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
 ##
 ##Assume Libs are copied with the package into
-QMAKE_LFLAGS += -Wl,--rpath=\\\$\$ORIGIN/libs
+#QMAKE_LFLAGS += -Wl,--rpath=\\\$\$ORIGIN/libs
+#QMAKE_LFLAGS += -Wl,--rpath-link=/usr/lib/x86_64-linux-gnu
+
 QMAKE_LFLAGS_RPATH=
 ###Using command : cp `ldd larvatrack | sed -re s/^.+\=\>// | sed -re 's/^(.+) \(.+\)/\1/'` /libs
 

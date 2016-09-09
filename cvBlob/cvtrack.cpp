@@ -25,6 +25,9 @@
 #include <list>
 using namespace std;
 
+#define TRACK_LUM_REPORT_INTERVAL 500 //Show VAlue Every 500 frames
+
+
 #if (defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__) || (defined(__APPLE__) & defined(__MACH__)))
     #include <cv.h>
 #else
@@ -334,8 +337,8 @@ namespace cvb
 //          // Select track
 //          //KL :SEG FAULT is caused by these searches failing -low rate occurance)
             CvTrack *track    = cTrack; //Start With the initial Track as picked //TODO:Change to NULL?
-          area = (cTrack->maxx-cTrack->minx)*(cTrack->maxy-cTrack->miny); //Area Of track we compare against
-          dist       = thDistance/2; //Distance over which Tracks are Clustered (Make Small so that we have higher track resolution)
+            area = (cTrack->maxx-cTrack->minx)*(cTrack->maxy-cTrack->miny); //Area Of track we compare against
+            dist       = thDistance/2; //Distance over which Tracks are Clustered (Make Small so that we have higher track resolution)
 //          // Go Through List Of tracks Around track -
 //          // Pick the one associated with the blob with larges area in proximity with picked track
            for (list<CvTrack*>::const_iterator it=tt.begin(); it!=tt.end(); ++it)
@@ -433,19 +436,19 @@ namespace cvb
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Removed - Erase Tracks that have been Inactive  - For BioLum Tracker
-//      for (CvTracks::iterator jt=tracks.begin(); jt!=tracks.end();)
-//        if ((jt->second->inactive>=thInactive)||((jt->second->inactive)&&(thActive)&&(jt->second->active<thActive)))
-//        {
-//          delete jt->second;
-//          tracks.erase(jt++);
-//        }
-//        else
-//        {
-//          jt->second->lifetime++;
-//          if (!jt->second->inactive)
-//            jt->second->active++;
-//          ++jt;
-//        }
+      for (CvTracks::iterator jt=tracks.begin(); jt!=tracks.end();)
+        if ((jt->second->inactive>=thInactive)||((jt->second->inactive)&&(thActive)&&(jt->second->active<thActive)))
+        {
+          delete jt->second;
+          tracks.erase(jt++);
+        }
+        else
+        {
+          jt->second->lifetime++;
+          if (!jt->second->inactive)
+            jt->second->active++;
+          ++jt;
+        }
 
     } //Closes Huge Try block
         catch (...)
@@ -560,6 +563,7 @@ namespace cvb
             //int c2 =  rand() % 200 + 30;
             //int c3 =  rand() % 200 + 30;
             //Draw each seg with colour
+            //Problem: How do we know each point on track corresponds to a video frame?
             for (int i=skipFrame;i < track.pointStack.size();i++)
             {
 
@@ -588,8 +592,10 @@ namespace cvb
                               cvcolour,// colour GBR ordering (here = green)
                               2, 		        // line thickness
                               CV_FILLED, 0);*/
-                cvLine(imgDest,track.pointStack[i-skipFrame],track.pointStack[i], cvcolour,1,CV_AA,0);
-                if ((mode & CV_TRACK_RENDER_LUM) && (i % 200 == 0)) ///Display Text of Lum Value
+                //cvLine(imgDest,track.pointStack[i-skipFrame],track.pointStack[i], cvcolour,1,CV_AA,0);
+                cvLine(imgDest,track.pointStack[i-1],track.pointStack[i], cvcolour,1,CV_AA,0);
+
+                if ((mode & CV_TRACK_RENDER_LUM) && (i % TRACK_LUM_REPORT_INTERVAL == 0)) ///Display Text of Lum Value
                 {
                     unsigned int vLumIndex  = (unsigned int)(i/(double)skipFrame);
                     unsigned int c1;

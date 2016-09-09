@@ -75,26 +75,25 @@ bool bMouseLButtonDown;
 //Bioluminescence Record
 QString infilename;
 std::vector<unsigned int> vLumRec; //Pointer to array of biolunim Data
-double gdLumRecfps = 10.0; ///NEED TO ADJUST THIS TO The biolum Rec either 10, or 0.5
-double gdvidfps = 13.0;
+double gdLumRecfps = 0.5; ///NEED TO ADJUST THIS TO The biolum Rec either 10, or 0.5
+double gdvidfps = 20.0;
 unsigned int nFrame;
-double  dContrast = 1.0; //Allows changing the contrast
+double  dContrast = 2.0; //Allows changing the contrast
 
 
-unsigned int gmaxLumValue = 80;
-unsigned int gminLumValue = 10;
+unsigned int gmaxLumValue = 1300;
+unsigned int gminLumValue = 400;
 
 //Area Filters
 double dMeanBlobArea = 10;
 double dVarBlobArea = 50;
 
-#define LOW_LOWERBOUND_BLOB_AREA 60.0
+#define LOW_LOWERBOUND_BLOB_AREA 120.0
 #define LOW_UPPERBOUND_BLOB_AREA 1500.0
-
 //BG History
 const int MOGhistory        = 100;
 //Processing Loop delay
-uint cFrameDelayms    = 1;
+uint cFrameDelayms          = 1;
 double dLearningRate        = 0.005;
 
 using namespace std;
@@ -109,7 +108,7 @@ int main(int argc, char *argv[])
     bTracking = false;
 
     QApplication app(argc, argv);
-    QQmlApplicationEngine engine;
+    //QQmlApplicationEngine engine;
 
 
     //outfilename.truncate(outfilename.lastIndexOf("."));
@@ -383,8 +382,8 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
             nLarva = countObjectsviaBlobs(fgMaskMOG2, blobs,tracks,gstroutDirCSV,frameNumberString,dMeanBlobArea);
 
             //ROI with TRACKs Fails
-            const int inactiveFrameCount = 10000; //Number of frames inactive until track is deleted
-            const int thActive = 5;// If a track becomes inactive but it has been active less than thActive frames, the track will be deleted.
+            const int inactiveFrameCount = 3000; //Number of frames inactive until track is deleted
+            const int thActive = 1;// If a track becomes inactive but it has been active less than thActive frames, the track will be deleted.
 
             //Tracking has Bugs when it involves Setting A ROI. SEG-FAULTS
             //thDistance = 22 //Distance from Blob to track
@@ -451,7 +450,7 @@ void checkPauseRun(int& keyboard,string frameNumberString)
     if ((char)keyboard == ']') //Double Contrast
     {
         dContrast =dContrast*1.05;
-        dLearningRate = 0.001;//Reset Learning Rate to high / due to img change
+        dLearningRate = 0.002;//Reset Learning Rate to high / due to img change
     }
 
 
@@ -940,6 +939,41 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
                 drawROI();
                 b1stPointSet = false; //Rotate To 1st Point Again
              }
+        }
+
+        if (!bPaused) //While Tracking a click is a point to be added to the track
+        {
+            // Add Click Point to Track point list of all (being Lazy, could do closest one) tracks
+            cv::Point pntCentroid = cv::Point(x,y);
+            cvb::CvTrack* cvTpicked =0; //Pointer to closest Track
+            cvb::CvTrack* cvT =0;
+            double d, dmin;
+            dmin = 500.0;
+            for (cvb::CvTracks::const_iterator it=tracks.begin(); it!=tracks.end(); ++it)
+            {
+                //Find Nearest Track
+
+                cvT = it->second;
+                //Calc Distance of click
+                d = round(sqrt( pow(x - cvT->centroid.x,2) + pow( (y - cvT->centroid.y),2)  ));
+                if (d < dmin)
+                {
+                    dmin = d;
+                    cvTpicked = cvT;
+                }
+
+            }
+            if (!cvTpicked) //NotNull
+            {   //If no track Found then create one
+                cvTpicked = new cvb::CvTrack;
+                cvTpicked->id = 1;
+                tracks.insert(cvb::CvIDTrack(1, cvTpicked));
+
+            }
+                cvT->pointStack.push_back(pntCentroid); //Add point to track
+                cvT->centroid.x = x; //Update Track Centroid to latest click
+                cvT->centroid.y = y;
+
         }
 
 
