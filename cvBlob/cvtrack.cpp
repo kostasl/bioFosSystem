@@ -563,8 +563,6 @@ namespace cvb
             //std::vector<CvPoint>* pvec = &track.pointStack;
             //Lum Colour
 
-            //int c2 =  rand() % 200 + 30;
-            //int c3 =  rand() % 200 + 30;
             //Draw each seg with colour
             //Problem: How do we know each point on track corresponds to a video frame?
             for (int i=skipFrame;i < track.pointStack.size();i++)
@@ -575,17 +573,16 @@ namespace cvb
                 //Make Sub vector Of Points that correspond to the same Lum Colour recording
                 std::vector<CvPoint>  vsubSeg(&track.pointStack[i-skipFrame].first,&track.pointStack[i].first);
 
-                CvPoint *pts = (CvPoint*) cv::Mat(vsubSeg).data;
-                int npts = cv::Mat(vsubSeg).rows;
-
-                //if (vLumIndex < vLumRec.size() )
-                    c1 =  255.0*(double)(track.pointStack[i].second-gminLumValue)/dnorm; // 255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
-                //else
-                //    c1 = 0;
+                c1 =  255.0*(double)(track.pointStack[i].second-gminLumValue)/dnorm; // 255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
 
                 cv::Scalar cvcolour(20,max(255-c1,0),min(c1,255));
 
-                /*cvPolyLine(imgDest, &pts,&npts, 1,
+
+                /* Used for when PolyLine Worked - new lib fails on this
+                    CvPoint *pts = (CvPoint*) cv::Mat(vsubSeg).data;
+                   int npts = cv::Mat(vsubSeg).rows;
+
+                  cvPolyLine(imgDest, &pts,&npts, 1,
                                 false, 			// draw open contour (i.e. joint end to start)
                                 cvcolour,// colour GBR ordering (here = green)
                                 2, 		        // line thickness
@@ -618,24 +615,43 @@ namespace cvb
 
 
             }
+        } //Render Track
+
+        if (mode & CV_TRACK_RENDER_HEATMAP) //With BIOLUM COLOURED Values
+        {
+
+            int c1                  = 0;
+            double dnorm            = (double)(gmaxLumValue-gminLumValue);
+            int increm              = dnorm/100;
+            int xstart              = 15;
+            int ystart              = 105;
+            //Go through Range - In step increments
+            for (int iclrVal=gminLumValue; iclrVal <= gmaxLumValue;iclrVal+=increm)
+            {
+              c1  =  255.0*(double)(iclrVal-gminLumValue)/dnorm; // 255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
+              cv::Scalar cvcolour(20,max(255-c1,0),min(c1,255));
+
+              //Paint line segment of heatmap
+              cvLine(imgDest,cv::Point(xstart, ystart), cv::Point(xstart,ystart+5), cvcolour,10,CV_AA,0);
+              ystart+=2; //Move down for next heat map segment
+
+              if (iclrVal==gminLumValue || iclrVal>=gmaxLumValue)
+              {
+                  CvFont* font =  new CvFont;
+                  cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.3, 0.3, 0, 1);
+                  stringstream buffer;
+                  buffer << iclrVal;
+                  cvPutText(imgDest, buffer.str().c_str(), CvPoint(xstart + 20,ystart), font, cvcolour);
+              }
+
+            }
+
+
+
+
         }
-           //Ony Render In Track
-//        if (mode & CV_TRACK_RENDER_LUM) ///Display Text of Lum Value
-//        {
-//            unsigned int vLumIndex  = (unsigned int)(track.pointStack.size()/(double)skipFrame);
-//            unsigned int c1;
-//            if (vLumIndex < vLumRec.size() )
-//                c1 =  vLumRec[vLumIndex];
-//            else
-//                c1 = 0;
 
 
-//            CvFont* font =  new CvFont;
-//            cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.5, 0.5, 0, 1);
-//            stringstream buffer;
-//            buffer << c1;
-//            cvPutText(imgDest, buffer.str().c_str(), cvPoint((int)track.centroid.x+10, (int)track.centroid.y-10), font, CV_RGB(60.,65.,220.));
-//        }
 
 
 __CV_END__;

@@ -649,7 +649,7 @@ int countObjectsviaBlobs(cv::Mat& srcimg,cvb::CvBlobs& blobs,cvb::CvTracks& trac
 
 
             if (iroi.contains(pnt))
-                cvRenderTrack(*((*it).second),vLumRec ,it->first ,  &fgMaskImg, &frameImg, CV_TRACK_RENDER_ID | CV_TRACK_RENDER_PATH | CV_TRACK_RENDER_LUM,&trackFnt );
+                cvRenderTrack(*((*it).second),vLumRec ,it->first ,  &fgMaskImg, &frameImg, CV_TRACK_RENDER_ID | CV_TRACK_RENDER_PATH | CV_TRACK_RENDER_LUM | CV_TRACK_RENDER_HEATMAP,&trackFnt );
 
 
         }
