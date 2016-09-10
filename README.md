@@ -26,7 +26,7 @@ The directory where the data csv files are exported must have  format EXP_N_YYYY
  *  m to show the masked image of the larva against BG.
  *  t Start Tracking
  *  q Exit Quit application
- *
+ * left click while tracking allows manual track point to be added to the track closest to click point 
 
 ### How do I get set up? ###
 
