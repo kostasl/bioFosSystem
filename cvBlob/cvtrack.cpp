@@ -46,6 +46,7 @@ extern double gdvidfps;
 extern unsigned int gmaxLumValue;
 extern unsigned int gminLumValue;
 extern unsigned int gframeLumValue;
+extern unsigned int gminTrackLength; //Inactive tracks shorter than n points are deleted
 //extern std::vector<unsigned int> vLumRec;
 
 namespace cvb
@@ -194,7 +195,7 @@ namespace cvb
   /// // Detect new tracks
   /// // Clustering
   /// Updates Active/Inactive Stats
-  /// Erase Tracks that have been Inactive according to rule
+  /// Erase Tracks that have been Inactive according to rule + Add filter to erase only small tracks
   /// delete Proximity Matrix
   void cvUpdateTracks(CvBlobs const &blobs, CvTracks &tracks, ltROIlist& vRoi, const double thDistance, const unsigned int thInactive, const unsigned int thActive)
   {
@@ -436,9 +437,10 @@ namespace cvb
       }// Loop Over nTracks (CLUSTERINg)
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Removed - Erase Tracks that have been Inactive  - For BioLum Tracker
+    ///Erase short Tracks (< gminTrackLength) that have been Inactive for min time of thInactive
       for (CvTracks::iterator jt=tracks.begin(); jt!=tracks.end();)
-        if ((jt->second->inactive>=thInactive)||((jt->second->inactive)&&(thActive)&&(jt->second->active<thActive)))
+
+        if ((jt->second->inactive>=thInactive && (jt->second->pointStack.size() < gminTrackLength)) || ((jt->second->inactive)&&(thActive)&&(jt->second->active<thActive)))
         {
           delete jt->second;
           tracks.erase(jt++);

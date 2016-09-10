@@ -52,4 +52,13 @@ unsigned int readBiolumFile(std::vector<unsigned int> &vBioLumRec,QString filena
 void CallBackFunc(int event, int x, int y, int flags, void* userdata); //Mouse Callback
 
 
+///
+/// \brief addClickAsTrackPoint allows manual tracking by adding a track point where the
+/// left mouse clicked, to the track found closest to the click point.
+/// The track's centroid is also updated to the click point- THis allows the tracking to resume on the same track, once the blob is available again
+///
+/// \param x Mouse click x
+/// \param y Mouse click y
+void addClickAsTrackPoint(int x, int y);
+
 #endif // LARVATRACK_H

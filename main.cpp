@@ -23,8 +23,11 @@
  ///*  Dependencies : opencv3
  ///*
  /// 17/6 forked from larvatrack to make Bioluminescence Tracker
- ///  TODO: video 1515 shows a larva that goes untracked for a while and Track Disappears -
- ///     * Ideally I should draw track lines on a img that is maintained and overlayed on the main frame - So to avoid slow downs
+ ///  TODO: *video 1515 shows a larva that goes untracked for a while and Track Disappears -> Fixed with semi-manual tracking (see below)
+ ///        * Ideally I should draw track lines on a img that is maintained and overlayed on the main frame - So to avoid slow downs
+ /// 9/9/16 Added some manual assisted tracking by letting a left click  add track point to the closest track to the click point.
+ ///        Fixed a possible sync issue between track and biolum values:/ Now each track point is created with the biolum value given by the vid.frame at the time of creation.
+ ///        Re-enabled erasing of tracks, but added filter to erase short on points and inactive ones
  ////////
 
 
@@ -81,9 +84,15 @@ unsigned int nFrame;
 double  dContrast = 2.0; //Allows changing the contrast
 
 
-unsigned int gmaxLumValue = 1300;
-unsigned int gminLumValue = 400;
+unsigned int gmaxLumValue = 1300; //Find this value in the GAL+/AEQ+ active video
+unsigned int gminLumValue = 100; //This min value should be obtained from the controls
 unsigned int gframeLumValue = 0; //The lum value at the current video frame
+
+//Track Erase Filters
+const int inactiveFrameCount    = 3000; //Number of frames inactive until track is deleted
+const int thActive              = 1;// If a track becomes inactive but it has been active less than thActive frames, the track will be deleted.
+unsigned int gminTrackLength = 100;
+
 //Area Filters
 double dMeanBlobArea = 10;
 double dVarBlobArea = 50;
@@ -382,8 +391,6 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
             nLarva = countObjectsviaBlobs(fgMaskMOG2, blobs,tracks,gstroutDirCSV,frameNumberString,dMeanBlobArea);
 
             //ROI with TRACKs Fails
-            const int inactiveFrameCount = 3000; //Number of frames inactive until track is deleted
-            const int thActive = 1;// If a track becomes inactive but it has been active less than thActive frames, the track will be deleted.
 
             //Tracking has Bugs when it involves Setting A ROI. SEG-FAULTS
             //thDistance = 22 //Distance from Blob to track
@@ -911,6 +918,51 @@ return irecCount;
 }
 
 
+///
+/// \brief addClickAsTrackPoint allows manual tracking by adding a track point where the
+/// left mouse clicked, to the track found closest to the click point.
+/// The track's centroid is also updated to the click point- THis allows the tracking to resume on the same track, once the blob is available again
+///
+/// \param x Mouse click x
+/// \param y Mouse click y
+///
+///
+void addClickAsTrackPoint(int x, int y)
+{
+    // Add Click Point to Track point list of all (being Lazy, could do closest one) tracks
+    cv::Point pntCentroid = cv::Point(x,y);
+    cvb::CvTrack* cvTpicked =0; //Pointer to closest Track
+    cvb::CvTrack* cvT =0;
+    double d, dmin;
+    dmin = 500.0;
+    for (cvb::CvTracks::const_iterator it=tracks.begin(); it!=tracks.end(); ++it)
+    {
+        //Find Nearest Track
+
+        cvT = it->second;
+        //Calc Distance of click
+        d = round(sqrt( pow(x - cvT->centroid.x,2) + pow( (y - cvT->centroid.y),2)  ));
+        if (d < dmin)
+        {
+            dmin = d;
+            cvTpicked = cvT;
+        }
+        std::cout << "Closest track dist:" << d << " min " << dmin <<  std::endl;
+
+    }
+    if (!cvTpicked) //NotNull
+    {   //If no track Found then create one
+        cvTpicked = new cvb::CvTrack;
+        cvTpicked->id = 1;
+        tracks.insert(cvb::CvIDTrack(1, cvTpicked));
+
+    }
+        cvTpicked->pointStack.push_back(std::pair<cv::Point,int>(pntCentroid,gframeLumValue)); //Add point to track
+        cvTpicked->centroid.x = x; //Update Track Centroid to latest click
+        cvTpicked->centroid.y = y;
+
+}
+
 //Mouse Call Back Function
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 {
@@ -943,38 +995,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 
         if (!bPaused) //While Tracking a click is a point to be added to the track
         {
-            // Add Click Point to Track point list of all (being Lazy, could do closest one) tracks
-            cv::Point pntCentroid = cv::Point(x,y);
-            cvb::CvTrack* cvTpicked =0; //Pointer to closest Track
-            cvb::CvTrack* cvT =0;
-            double d, dmin;
-            dmin = 500.0;
-            for (cvb::CvTracks::const_iterator it=tracks.begin(); it!=tracks.end(); ++it)
-            {
-                //Find Nearest Track
-
-                cvT = it->second;
-                //Calc Distance of click
-                d = round(sqrt( pow(x - cvT->centroid.x,2) + pow( (y - cvT->centroid.y),2)  ));
-                if (d < dmin)
-                {
-                    dmin = d;
-                    cvTpicked = cvT;
-                }
-                std::cout << "Closest track dist:" << d << " min " << dmin <<  std::endl;
-
-            }
-            if (!cvTpicked) //NotNull
-            {   //If no track Found then create one
-                cvTpicked = new cvb::CvTrack;
-                cvTpicked->id = 1;
-                tracks.insert(cvb::CvIDTrack(1, cvTpicked));
-
-            }
-                cvTpicked->pointStack.push_back(std::pair<cv::Point,int>(pntCentroid,gframeLumValue)); //Add point to track
-                cvTpicked->centroid.x = x; //Update Track Centroid to latest click
-                cvTpicked->centroid.y = y;
-
+            addClickAsTrackPoint(x,y);
         }
 
 
