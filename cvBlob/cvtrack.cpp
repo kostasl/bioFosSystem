@@ -562,52 +562,40 @@ namespace cvb
             int t1; //Line Thickness
             //std::vector<CvPoint>* pvec = &track.pointStack;
             //Lum Colour
-
+            const int cavgSamples = 20;
             //Draw each seg with colour
             //Problem: How do we know each point on track corresponds to a video frame?
-            for (int i=skipFrame;i < track.pointStack.size();i++)
+            for (int i=skipFrame+cavgSamples;i < track.pointStack.size();i++)
             {
 
                 //unsigned int vLumIndex  = (unsigned int)(i/(double)skipFrame);
                 double dnorm            = (double)(gmaxLumValue-gminLumValue);
 
-                //Make Sub vector Of Points that correspond to the same Lum Colour recording
-                //std::vector<CvPoint>  vsubSeg(&track.pointStack[i-skipFrame].first,&track.pointStack[i].first);
+                //Calc recent Avg Lum Signal
+                unsigned int ilum = 0;
+                for (int j=0;j<cavgSamples;j++)
+                    ilum += track.pointStack[i-j].second;
 
-                c1 =  255.0*(double)(track.pointStack[i].second-gminLumValue)/dnorm; // 255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
+                ilum = ilum/cavgSamples; //Calc Avg Lum, so as to colour the track smoothly
+
+                c1 =  255.0*(double)(ilum-gminLumValue)/dnorm; // 255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
 
                 //cv::Scalar cvcolour(20,max(255-c1,0),min(c1,255));
                 cv::Scalar cvcolour =  cymk2rgb(cv::Scalar(20,max(255-c1,0),min(c1,255),120));
 
-                /* Used for when PolyLine Worked - new lib fails on this
-                    CvPoint *pts = (CvPoint*) cv::Mat(vsubSeg).data;
-                   int npts = cv::Mat(vsubSeg).rows;
-
-                  cvPolyLine(imgDest, &pts,&npts, 1,
-                                false, 			// draw open contour (i.e. joint end to start)
-                                cvcolour,// colour GBR ordering (here = green)
-                                2, 		        // line thickness
-                                CV_FILLED, 0);*/
-                /*cv::polylines(imgDest, &pts,&npts, 1,
-                              false, 			// draw open contour (i.e. joint end to start)
-                              cvcolour,// colour GBR ordering (here = green)
-                              2, 		        // line thickness
-                              CV_FILLED, 0);*/
                 //cvLine(imgDest,track.pointStack[i-skipFrame],track.pointStack[i], cvcolour,1,CV_AA,0);
                 cvLine(imgDest,track.pointStack[i-1].first,track.pointStack[i].first, cvcolour,2,CV_AA,0);
 
-                if ((mode & CV_TRACK_RENDER_LUM) && (i % TRACK_LUM_REPORT_INTERVAL == 0)) ///Display Text of Lum Value
+                //Do regular Reporting of luminance value on the track / only if value high enough
+                if ((mode & CV_TRACK_RENDER_LUM) && (i % TRACK_LUM_REPORT_INTERVAL == 0) && (ilum > gmaxLumValue/3 || (i==skipFrame+cavgSamples) ) ) ///Display Text of Lum Value
                 {
-                    unsigned int c1;
-                    c1 = track.pointStack[i].second;// vLumRec[vLumIndex];
-
 
                     CvFont* font =  new CvFont;
                     cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.6, 0.6, 0, 1);
                     stringstream buffer;
-                    buffer << c1;
+                    buffer << ilum;
                     //cvPutText(imgDest, buffer.str().c_str(), CvPoint(vsubSeg[0].x + 5,vsubSeg[0].y + 5), font, cvcolour);
-                    cvPutText(imgDest, buffer.str().c_str(), CvPoint(track.pointStack[i-1].first.x + 5,track.pointStack[i-1].first.y + 5), font, cvcolour);
+                    cvPutText(imgDest, buffer.str().c_str(), CvPoint(track.pointStack[i-1].first.x + 5,track.pointStack[i-1].first.y + 5), font, cv::Scalar(20,255,0));
 
                 }
 
@@ -626,7 +614,7 @@ namespace cvb
             int ystart              = 125;
             //Go through Range - In step increments
             int iclrVal; //Current Lum Value drawn in the map
-            for (int i=0; iclrVal < rangesteps;i++) //Split Full Range into 100 steps
+            for (int i=0; i < rangesteps;i++) //Split Full Range into 100 steps
             {
               iclrVal = gminLumValue + increm*i; //add increment * iteration
               c1  =  255.0*(double)(iclrVal-gminLumValue)/dnorm; // 255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
@@ -637,9 +625,9 @@ namespace cvb
 
               //Paint line segment of heatmap
               cvLine(imgDest,cv::Point(xstart, ystart), cv::Point(xstart,ystart+5), cvcolour,20,CV_AA,0);
-              ystart+=10; //Move down for next heat map segment
+              ystart+=5; //Move down for next heat map segment
 
-              if (iclrVal==gminLumValue || iclrVal>=gmaxLumValue)
+              if (i==0 || i>= (rangesteps -1))
               {
                   CvFont* font =  new CvFont;
                   cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.8, 0.8, 0, 1);

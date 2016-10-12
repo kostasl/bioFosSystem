@@ -131,9 +131,10 @@ int main(int argc, char *argv[])
 
     unsigned int minfileLum;
     unsigned int maxfileLum;
-    readBiolumFile(vLumRec, infilename, maxfileLum,minfileLum);
-    cout << "Lum Record has min:" << minfileLum << " max:" << maxfileLum << endl;
-    gmaxLumValue = 10*(round(maxfileLum/10.0));
+    unsigned int meanfileLum;
+    readBiolumFile(vLumRec, infilename, maxfileLum,minfileLum,meanfileLum);
+    cout << "Lum Record has min:" << minfileLum << " max:" << maxfileLum << " mean:" << meanfileLum << endl;
+    gmaxLumValue = meanfileLum*2; // 10*(round(maxfileLum/10.0));
     cout << "Set Max Lum To: "<< gmaxLumValue << endl;
 
     // get the applications dir pah and expose it to QML
@@ -886,12 +887,13 @@ int saveTracks(cvb::CvTracks& tracks,QString filename,std::string frameNumber)
      return cnt;
 }
 
-
-unsigned int readBiolumFile(std::vector<unsigned int> &vBioLumRec,QString filename,unsigned int& imaxValue,unsigned int& iminValue)
+//Returns Record Count
+unsigned int readBiolumFile(std::vector<unsigned int> &vBioLumRec,QString filename,unsigned int& imaxValue,unsigned int& iminValue,unsigned int& imeanValue)
 {
 
      imaxValue = 0;
      iminValue = 0;
+     imeanValue = 0;
      unsigned int irecCount=0;
 
      unsigned int isample;
@@ -923,10 +925,12 @@ unsigned int readBiolumFile(std::vector<unsigned int> &vBioLumRec,QString filena
             if (iminValue > isample)
                 iminValue = isample;
 
-
+            imeanValue+=isample;
 
         }
+
     }
+    imeanValue = imeanValue/irecCount; //Divide By number of samples
 
 return irecCount;
 }
