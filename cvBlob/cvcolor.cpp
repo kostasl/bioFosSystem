@@ -50,15 +50,15 @@ namespace cvb
       int img_offset = 0;
       if(imgLabel->roi)
       {
-	imgLabel_width = imgLabel->roi->width;
-	imgLabel_height = imgLabel->roi->height;
-	imgLabel_offset = (imgLabel->nChannels * imgLabel->roi->xOffset) + (imgLabel->roi->yOffset * stepLbl);
+        imgLabel_width = imgLabel->roi->width;
+        imgLabel_height = imgLabel->roi->height;
+        imgLabel_offset = (imgLabel->nChannels * imgLabel->roi->xOffset) + (imgLabel->roi->yOffset * stepLbl);
       }
       if(img->roi)
       {
-	img_width = img->roi->width;
-	img_height = img->roi->height;
-	img_offset = (img->nChannels * img->roi->xOffset) + (img->roi->yOffset * stepImg);
+        img_width = img->roi->width;
+        img_height = img->roi->height;
+        img_offset = (img->nChannels * img->roi->xOffset) + (img->roi->yOffset * stepImg);
       }
 
       CvLabel *labels = (CvLabel *)imgLabel->imageData + imgLabel_offset;
@@ -101,4 +101,39 @@ namespace cvb
     __CV_END__;
   }
 
+  //KL Convert colour from rgb values to cmyk
+  CvScalar rgb2cymk(CvScalar rgb)
+  {
+      CvScalar cymk; //Array
+
+      float r = (int)rgb.val[2] / 255.;
+      float g = (int)rgb.val[1] / 255.;
+      float b = (int)rgb.val[0] / 255.;
+      float k = std::min(std::min(1- r, 1- g), 1- b);
+
+      cymk.val[0] = (1 - r - k) / (1 - k) * 255.;
+      cymk.val[2] = (1 - g - k) / (1 - k) * 255.;
+      cymk.val[1] = (1 - b - k) / (1 - k) * 255.;
+      cymk.val[3] = k * 255.;
+
+      return cymk;
+  }
+
+  CvScalar cymk2rgb(CvScalar cymk)
+  {
+      CvScalar rgb; //Array
+      if (cymk.val[3]!=255) {
+             rgb.val[0] = (int)((255-cymk.val[0]) * (255-cymk.val[3])) / 255.;
+             rgb.val[1] = (int)((255-cymk.val[2]) * (255-cymk.val[3])) / 255.;
+             rgb.val[2] = (int)((255-cymk.val[1]) * (255-cymk.val[3])) / 255.;
+         } else {
+             rgb.val[0] = 255 - cymk.val[0];
+             rgb.val[1] = 255 - cymk.val[2];
+             rgb.val[2] = 255 - cymk.val[1];
+         }
+    return rgb;
+
+  }
+
 }
+

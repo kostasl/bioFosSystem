@@ -78,23 +78,23 @@ bool bMouseLButtonDown;
 //Bioluminescence Record
 QString infilename;
 std::vector<unsigned int> vLumRec; //Pointer to array of biolunim Data
-double gdLumRecfps = 0.5; ///NEED TO ADJUST THIS TO The biolum Rec either 10, or 0.5
+double gdLumRecfps = 10.0; ///NEED TO ADJUST THIS TO The biolum Rec either 10, or 0.5
 double gdvidfps = 20.0;
 unsigned int nFrame;
-double  dContrast = 2.0; //Allows changing the contrast
+double  dContrast = 0.7; //Allows changing the contrast
 
 
-unsigned int gmaxLumValue = 1300; //Find this value in the GAL+/AEQ+ active video
-unsigned int gminLumValue = 100; //This min value should be obtained from the controls
+unsigned int gmaxLumValue = 30; //Find this value in the GAL+/AEQ+ active video
+unsigned int gminLumValue = 0; //This min value should be obtained from the controls
 unsigned int gframeLumValue = 0; //The lum value at the current video frame
 
 //Track Erase Filters
 const int inactiveFrameCount    = 3000; //Number of frames inactive until track is deleted
 const int thActive              = 1;// If a track becomes inactive but it has been active less than thActive frames, the track will be deleted.
-unsigned int gminTrackLength = 100;
+unsigned int gminTrackLength = 300;
 
 //Area Filters
-double dMeanBlobArea = 10;
+double dMeanBlobArea = 80;
 double dVarBlobArea = 50;
 
 #define LOW_LOWERBOUND_BLOB_AREA 120.0
@@ -133,6 +133,9 @@ int main(int argc, char *argv[])
     unsigned int maxfileLum;
     readBiolumFile(vLumRec, infilename, maxfileLum,minfileLum);
     cout << "Lum Record has min:" << minfileLum << " max:" << maxfileLum << endl;
+    gmaxLumValue = 10*(round(maxfileLum/10.0));
+    cout << "Set Max Lum To: "<< gmaxLumValue << endl;
+
     // get the applications dir pah and expose it to QML
     //engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
     //Init Font
@@ -294,7 +297,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
         //If Mask shows that a large ratio of pixels is changing then - adjust learning rate to keep activity below 0.006
 
         if (nLarva > 1 || dblRatioPxChanged > 0.15) //Added Count Limit (dblRatioPxChanged > 0.35 ||
-            dLearningRate = max(min(dLearningRate*1.02,0.001),0.00001);
+            dLearningRate = max(min(dLearningRate*1.07,0.001),0.00001);
         else if (nLarva < 1 || dMeanBlobArea < 300)//(nFrame > MOGhistory*2)
             dLearningRate = 0.00000001 + dLearningRate*0.98; //Exp Reduction
         else
@@ -306,6 +309,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
         frame.convertTo(frame, -1, dContrast, 0); //increase Contrast
 
         pMOG2->apply(frame, fgMaskMOG2,dLearningRate);
+
         //OPENCV 3
 //        pMOG->operator()(frame, fgMaskMOG2,dLearningRate);
         //get the frame number and write it on the current frame
@@ -462,8 +466,18 @@ void checkPauseRun(int& keyboard,string frameNumberString)
 
 
 
-    if ((char)keyboard == 't') //Toggle Tracking
+    if ((char)keyboard == 't'){ //Toggle Tracking
+        //
         bTracking = !bTracking;
+//Reset BackGround Model Upon Track start?
+        if (bTracking) {
+            pMOG2->clear();
+            pMOG2->setHistory(MOGhistory);
+        }
+//        else
+//            pMOG2->setHistory(0);
+
+    }
 
         while (bPaused)
         {

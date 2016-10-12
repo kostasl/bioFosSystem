@@ -570,13 +570,14 @@ namespace cvb
 
                 //unsigned int vLumIndex  = (unsigned int)(i/(double)skipFrame);
                 double dnorm            = (double)(gmaxLumValue-gminLumValue);
+
                 //Make Sub vector Of Points that correspond to the same Lum Colour recording
-                std::vector<CvPoint>  vsubSeg(&track.pointStack[i-skipFrame].first,&track.pointStack[i].first);
+                //std::vector<CvPoint>  vsubSeg(&track.pointStack[i-skipFrame].first,&track.pointStack[i].first);
 
                 c1 =  255.0*(double)(track.pointStack[i].second-gminLumValue)/dnorm; // 255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
 
-                cv::Scalar cvcolour(20,max(255-c1,0),min(c1,255));
-
+                //cv::Scalar cvcolour(20,max(255-c1,0),min(c1,255));
+                cv::Scalar cvcolour =  cymk2rgb(cv::Scalar(20,max(255-c1,0),min(c1,255),120));
 
                 /* Used for when PolyLine Worked - new lib fails on this
                     CvPoint *pts = (CvPoint*) cv::Mat(vsubSeg).data;
@@ -593,23 +594,21 @@ namespace cvb
                               2, 		        // line thickness
                               CV_FILLED, 0);*/
                 //cvLine(imgDest,track.pointStack[i-skipFrame],track.pointStack[i], cvcolour,1,CV_AA,0);
-                cvLine(imgDest,track.pointStack[i-1].first,track.pointStack[i].first, cvcolour,1,CV_AA,0);
+                cvLine(imgDest,track.pointStack[i-1].first,track.pointStack[i].first, cvcolour,2,CV_AA,0);
 
                 if ((mode & CV_TRACK_RENDER_LUM) && (i % TRACK_LUM_REPORT_INTERVAL == 0)) ///Display Text of Lum Value
                 {
-                    //unsigned int vLumIndex  = (unsigned int)(i/(double)skipFrame);
                     unsigned int c1;
-                    //if (vLumIndex < vLumRec.size() )
                     c1 = track.pointStack[i].second;// vLumRec[vLumIndex];
-                    //else
-                    //    c1 = 0;
 
 
                     CvFont* font =  new CvFont;
-                    cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.3, 0.3, 0, 1);
+                    cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.6, 0.6, 0, 1);
                     stringstream buffer;
                     buffer << c1;
-                    cvPutText(imgDest, buffer.str().c_str(), CvPoint(vsubSeg[0].x + 5,vsubSeg[0].y + 5), font, cvcolour);
+                    //cvPutText(imgDest, buffer.str().c_str(), CvPoint(vsubSeg[0].x + 5,vsubSeg[0].y + 5), font, cvcolour);
+                    cvPutText(imgDest, buffer.str().c_str(), CvPoint(track.pointStack[i-1].first.x + 5,track.pointStack[i-1].first.y + 5), font, cvcolour);
+
                 }
 
 
@@ -619,26 +618,31 @@ namespace cvb
 
         if (mode & CV_TRACK_RENDER_HEATMAP) //With BIOLUM COLOURED Values
         {
-
+            const float rangesteps = 100.0f;
             int c1                  = 0;
             double dnorm            = (double)(gmaxLumValue-gminLumValue);
-            int increm              = dnorm/100;
-            int xstart              = 15;
-            int ystart              = 105;
+            float increm              = (dnorm+1)/rangesteps;
+            int xstart              = 20; //Position to start drawing heatmap
+            int ystart              = 125;
             //Go through Range - In step increments
-            for (int iclrVal=gminLumValue; iclrVal <= gmaxLumValue;iclrVal+=increm)
+            int iclrVal; //Current Lum Value drawn in the map
+            for (int i=0; iclrVal < rangesteps;i++) //Split Full Range into 100 steps
             {
+              iclrVal = gminLumValue + increm*i; //add increment * iteration
               c1  =  255.0*(double)(iclrVal-gminLumValue)/dnorm; // 255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
-              cv::Scalar cvcolour(20,max(255-c1,0),min(c1,255));
+
+              cv::Scalar cvcolour =  cymk2rgb(cv::Scalar(20,max(255-c1,0),min(c1,255),120));
+
+
 
               //Paint line segment of heatmap
-              cvLine(imgDest,cv::Point(xstart, ystart), cv::Point(xstart,ystart+5), cvcolour,10,CV_AA,0);
-              ystart+=2; //Move down for next heat map segment
+              cvLine(imgDest,cv::Point(xstart, ystart), cv::Point(xstart,ystart+5), cvcolour,20,CV_AA,0);
+              ystart+=10; //Move down for next heat map segment
 
               if (iclrVal==gminLumValue || iclrVal>=gmaxLumValue)
               {
                   CvFont* font =  new CvFont;
-                  cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.3, 0.3, 0, 1);
+                  cvInitFont(font, CV_FONT_HERSHEY_DUPLEX, 0.8, 0.8, 0, 1);
                   stringstream buffer;
                   buffer << iclrVal;
                   cvPutText(imgDest, buffer.str().c_str(), CvPoint(xstart + 20,ystart), font, cvcolour);

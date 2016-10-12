@@ -16,9 +16,16 @@ SOURCES += main.cpp \
 
 RESOURCES += qml.qrc
 
-INCLUDEPATH +=/home/klagogia/opencv-3.0.0-installed/include/opencv2 \
-                /home/klagogia/opencv-3.0.0-installed/include \
-                /home/klagogia/opencv-3.0.0-installed/include/opencv
+#/home/kostasl/OpenCV/opencv-3.0.0/include
+#INCLUDEPATH +=/home/kostasl/OpenCV/opencv-3.0.0/include/opencv2 \
+#                /home/kostasl/OpenCV/opencv-3.0.0/include \
+#                /home/kostasl/OpenCV/opencv-3.0.0/include/opencv
+
+##Put OpenCV Installation Dir Here
+#INCLUDEPATH +=/home/klagogia/opencv-3.0.0-installed/include/opencv2 \
+#                /home/klagogia/opencv-3.0.0-installed/include \
+#                /home/klagogia/opencv-3.0.0-installed/include/opencv
+
 
 #INCLUDEPATH += /usr/local/include/opencv2
 #INCLUDEPATH += /usr/include/cvblob
@@ -29,16 +36,16 @@ INCLUDEPATH +=/home/klagogia/opencv-3.0.0-installed/include/opencv2 \
 ##Or Check CV_MAJOR_VERSION, CV_MINOR_VERSION
 
 #BEst to make opencv with flag WITH_CUDA=OFF
-#LIBS += `pkg-config opencv --libs`
-LIBS += -L/home/klagogia/opencv-3.0.0-installed/lib \
-            -lopencv_core \
-            -lopencv_highgui \
-            -lopencv_imgproc \
-            -lopencv_features2d\
-            -lopencv_video \
-            -lopencv_videoio \
-            -lopencv_imgcodecs
-
+LIBS += `pkg-config opencv --libs`
+#LIBS += -Lkostasl/OpenCV/opencv-3.0.0/lib \
+#            -lopencv_core \
+ #           -lopencv_highgui \
+  #          -lopencv_imgproc \
+   #         -lopencv_features2d\
+    #        -lopencv_video \
+     #       -lopencv_videoio \
+ #           -lopencv_imgcodecs
+#
 LIBS += -L/usr/lib/x86_64-linux-gnu
 #LIBS += -L/usr/local/cuda-7.5/targets/x86_64-linux/lib/ -lcudart #Necessary BS. cause linker looks for  and cudart.7.5 (installed)
 #LIBS += -L/home/klagogia/workspace/build-larvaltrack-Desktop-Release/libs/ -lcudart # cudart.7.0(not installed)

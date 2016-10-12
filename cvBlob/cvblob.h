@@ -631,6 +631,13 @@ extern "C" {
   /// \brief KL found this prototype in cvtrack.cpp - moved it to header - not sure what it does.
   void getClusterForBlob(unsigned int blobPos, CvID *close, unsigned int nBlobs, unsigned int nTracks, CvBlobs const &blobs, CvTracks const &tracks, std::list<CvBlob*> &bb, std::list<CvTrack*> &tt);
 
+
+  ///\fn  CvScalar rgb2cymk(CvScalar rgb)
+  /// Convert RGB values to cymk, stored in CvScalar
+   CvScalar rgb2cymk(CvScalar rgb);
+
+   CvScalar cymk2rgb(CvScalar cymk);
+
   }
 
 
