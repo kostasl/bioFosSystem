@@ -867,7 +867,7 @@ int saveTracks(cvb::CvTracks& tracks,QString filename,std::string frameNumber)
 
             QTextStream output(&data);
             if (bNewFileFlag)
-                 output << "frameN,TrackID,TrackBlobLabel,Centroid_X,Centroid_Y,Lifetime,Active,Inactive" << endl;
+                 output << "frameN,t(sec),TrackID,TrackBlobLabel,Centroid_X,Centroid_Y,Lifetime,Active,Inactive" << endl;
 
             //Save Tracks In ROI
             for (cvb::CvTracks::const_iterator it=tracks.begin(); it!=tracks.end(); ++it)
@@ -885,7 +885,7 @@ int saveTracks(cvb::CvTracks& tracks,QString filename,std::string frameNumber)
                     //+ lifetime; ///< Indicates how much frames the object has been in scene.
                     //+active; ///< Indicates number of frames that has been active from last inactive period.
                     //+ inactive; ///< Indicates number of frames that has been missing.
-                    output << frameNumber.c_str()  << "," << cvT->id  << "," << cvT->label  << "," << cvT->centroid.x << "," << cvT->centroid.y << "," << cvT->lifetime  << "," << cvT->active  << "," << cvT->inactive <<  endl;
+                    output << nFrame  << "," << (float)(nFrame/gdvidfps) << "," << cvT->id  << "," << cvT->label  << "," << cvT->centroid.x << "," << cvT->centroid.y << "," << cvT->lifetime  << "," << cvT->active  << "," << cvT->inactive <<  endl;
               }
             }
         data.close();
