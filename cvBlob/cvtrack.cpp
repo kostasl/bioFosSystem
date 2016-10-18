@@ -25,7 +25,7 @@
 #include <list>
 using namespace std;
 
-#define TRACK_LUM_REPORT_INTERVAL 500 //Show VAlue Every 500 frames
+#define TRACK_LUM_REPORT_INTERVAL 600 //Show VAlue Every 500 frames
 
 
 #if (defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__) || (defined(__APPLE__) & defined(__MACH__)))
@@ -572,19 +572,25 @@ namespace cvb
                 double dnorm            = (double)(gmaxLumValue-gminLumValue);
 
                 //Calc recent Avg Lum Signal
-                unsigned int ilum = 0;
+                int ilum = 0;
                 for (int j=0;j<cavgSamples;j++)
-                    ilum += track.pointStack[i-j].second;
+                    if (track.pointStack[i-j].second >= gminLumValue)
+                        ilum += track.pointStack[i-j].second;
+                    else
+                       ilum = -1;
 
-                ilum = ilum/cavgSamples; //Calc Avg Lum, so as to colour the track smoothly
+               //Defaults to use When Lum Value is missing
+                int ithickness = 1;
+                cv::Scalar cvcolour(120,120,120);
 
-                c1 =  255.0*(double)(ilum-gminLumValue)/dnorm; // 255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
+                if (ilum > 0){ //only show where Lum Values Exist/ Otherwise Change Colour
+                    ilum = min((int)gmaxLumValue,ilum/cavgSamples); //Calc Avg Lum, so as to colour the track smoothly
+                    c1 =  255.0*(double)(ilum-gminLumValue)/dnorm; // 255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
+                    cvcolour =  cymk2rgb(cv::Scalar(20,min(c1,255),max(255-c1,0),80)); //Replace With Lum Colour
+                    ithickness = max(1,(int)(5.0*(float)ilum/dnorm));
+                }
+                cvLine(imgDest,track.pointStack[i-1].first,track.pointStack[i].first, cvcolour,ithickness,CV_AA,0);
 
-                //cv::Scalar cvcolour(20,max(255-c1,0),min(c1,255));
-                cv::Scalar cvcolour =  cymk2rgb(cv::Scalar(20,max(255-c1,0),min(c1,255),120));
-
-                //cvLine(imgDest,track.pointStack[i-skipFrame],track.pointStack[i], cvcolour,1,CV_AA,0);
-                cvLine(imgDest,track.pointStack[i-1].first,track.pointStack[i].first, cvcolour,2,CV_AA,0);
 
                 //Do regular Reporting of luminance value on the track / only if value high enough
                 if ((mode & CV_TRACK_RENDER_LUM) && (i % TRACK_LUM_REPORT_INTERVAL == 0) && (ilum > gmaxLumValue/3 || (i==skipFrame+cavgSamples) ) ) ///Display Text of Lum Value
@@ -614,17 +620,19 @@ namespace cvb
             int ystart              = 125;
             //Go through Range - In step increments
             int iclrVal; //Current Lum Value drawn in the map
+            int ithickness = 20;
+
             for (int i=0; i < rangesteps;i++) //Split Full Range into 100 steps
             {
               iclrVal = gminLumValue + increm*i; //add increment * iteration
               c1  =  255.0*(double)(iclrVal-gminLumValue)/dnorm; // 255.0*((double)vLumRec[vLumIndex]-gminLumValue)/dnorm;
 
-              cv::Scalar cvcolour =  cymk2rgb(cv::Scalar(20,max(255-c1,0),min(c1,255),120));
+              cv::Scalar cvcolour =  cymk2rgb(cv::Scalar(20,min(c1,255),max(255-c1,0),80));
 
 
-
+              ithickness = int(6+14.0*(double)(iclrVal-gminLumValue)/dnorm);
               //Paint line segment of heatmap
-              cvLine(imgDest,cv::Point(xstart, ystart), cv::Point(xstart,ystart+5), cvcolour,20,CV_AA,0);
+              cvLine(imgDest,cv::Point(xstart, ystart), cv::Point(xstart,ystart+5), cvcolour,ithickness,CV_AA,0);
               ystart+=5; //Move down for next heat map segment
 
               if (i==0 || i>= (rangesteps -1))

@@ -79,25 +79,26 @@ bool bMouseLButtonDown;
 QString infilename;
 std::vector<unsigned int> vLumRec; //Pointer to array of biolunim Data
 double gdLumRecfps = 10.0; ///NEED TO ADJUST THIS TO The biolum Rec either 10, or 0.5
-double gdvidfps = 20.0;
+double gdvidfps = 13.0; //Automatically read from Video File Anyway
 unsigned int nFrame;
-double  dContrast = 0.7; //Allows changing the contrast
+double  dContrast = 0.45;//0.7; //Allows changing the contrast
 
 
 unsigned int gmaxLumValue = 30; //Find this value in the GAL+/AEQ+ active video
 unsigned int gminLumValue = 0; //This min value should be obtained from the controls
-unsigned int gframeLumValue = 0; //The lum value at the current video frame
+int gframeLumValue = 0; //The lum value at the current video frame (int so -1 means Unset/missing)
 
 //Track Erase Filters
 const int inactiveFrameCount    = 3000; //Number of frames inactive until track is deleted
 const int thActive              = 1;// If a track becomes inactive but it has been active less than thActive frames, the track will be deleted.
 unsigned int gminTrackLength = 300;
+const int iLumIndexDelay       = 6.0*gdvidfps; //There is a sync issue between biolum record and Video - This is the number of frames Lum rec. needs to be delayed to match shutter open
 
 //Area Filters
-double dMeanBlobArea = 80;
+double dMeanBlobArea = 70;
 double dVarBlobArea = 50;
 
-#define LOW_LOWERBOUND_BLOB_AREA 120.0
+#define LOW_LOWERBOUND_BLOB_AREA 100.0
 #define LOW_UPPERBOUND_BLOB_AREA 1500.0
 //BG History
 const int MOGhistory        = 100;
@@ -265,7 +266,7 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
 
     //create the capture object
     cv::VideoCapture capture(videoFilename.toStdString());
-    gdvidfps = capture.get(CV_CAP_PROP_FPS);
+    gdvidfps = capture.get(CV_CAP_PROP_FPS); //Get Vid FPS
 
     if(!capture.isOpened()){
         //error in opening the video input
@@ -325,11 +326,11 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
 
         //Put Info TextOn Frame
         //Frame Number
-        cv::rectangle(frame, cv::Point(10, 2), cv::Point(100,20),
+        cv::rectangle(frame, cv::Point(10, 2), cv::Point(130,20),
                   cv::Scalar(255,255,255), -1);
 
         std::stringstream ss;
-        ss << nFrame;
+        ss << nFrame << " t:"<< (unsigned int)(nFrame/gdvidfps);
         frameNumberString = ss.str();
         cv::putText(frame, frameNumberString.c_str(), cv::Point(15, 15),
                 cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
@@ -353,16 +354,22 @@ unsigned int processVideo(QString videoFilename,QString outFileCSV,unsigned int 
         ///Show Biolum. PMT value of current Frame
 
         //Write Lum Value To Screen
-        int skipFrame = gdvidfps/gdLumRecfps; //Use Ratio of fps to calculate Frame Lag before drawing 1st track segment
-        unsigned int vLumIndex  = (unsigned int)(nFrame/(double)skipFrame);
-
-        if (vLumIndex < vLumRec.size() )
-            gframeLumValue =  vLumRec[vLumIndex];
-        else
-            gframeLumValue = 0;
-
+        //Assumes Biolum start is synced to Video Start - Calc Time t using Vid FPS and current frame and find bioLum record using t
+        //int skipFrame = gdvidfps/gdLumRecfps; //Use Ratio of fps to calculate Frame Lag before drawing 1st track segment
+        unsigned int vLumIndex  = (unsigned int)(nFrame/gdvidfps)*(double)gdLumRecfps; //Add 13 As the shutter open lags the biolum
         stringstream buffer;
-        buffer << "Lum:" <<  gframeLumValue;
+
+        if (vLumIndex < vLumRec.size() && vLumIndex > iLumIndexDelay ){
+            gframeLumValue =  vLumRec[vLumIndex-iLumIndexDelay];
+            buffer << "Lum:" <<  gframeLumValue;
+        }
+        else{
+            buffer << "Lum: N/A";
+            gframeLumValue = -1;
+        }
+
+
+
         cv::rectangle(frame, cv::Point(10, 75), cv::Point(100,95), cv::Scalar(255,255,255), -1);
         cv::putText(frame, buffer.str().c_str(),cv::Point(15, 88),
                     cv::FONT_HERSHEY_SIMPLEX, 0.5 , cv::Scalar(0,0,0));
