@@ -28,6 +28,9 @@
  /// 9/9/16 Added some manual assisted tracking by letting a left click  add track point to the closest track to the click point.
  ///        Fixed a possible sync issue between track and biolum values:/ Now each track point is created with the biolum value given by the vid.frame at the time of creation.
  ///        Re-enabled erasing of tracks, but added filter to erase short on points and inactive ones
+ ///
+ /// ~10/10/16 I added CYMK colour map, with the addition of Line thickness.
+ /// 24/10/16 Added Speed measurement to Output file.
  ////////
 
 
@@ -670,8 +673,9 @@ int countObjectsviaBlobs(cv::Mat& srcimg,cvb::CvBlobs& blobs,cvb::CvTracks& trac
             pnt.y = it->second->centroid.y;
 
 
+            //CV_TRACK_RENDER_LUM
             if (iroi.contains(pnt))
-                cvRenderTrack(*((*it).second),vLumRec ,it->first ,  &fgMaskImg, &frameImg, CV_TRACK_RENDER_ID | CV_TRACK_RENDER_PATH | CV_TRACK_RENDER_LUM | CV_TRACK_RENDER_HEATMAP,&trackFnt );
+                cvRenderTrack(*((*it).second),vLumRec ,it->first ,  &fgMaskImg, &frameImg, CV_TRACK_RENDER_ID | CV_TRACK_RENDER_PATH | CV_TRACK_RENDER_HEATMAP,&trackFnt );
 
 
         }
@@ -844,6 +848,8 @@ int saveTracks(cvb::CvTracks& tracks,QString filename,std::string frameNumber)
     bool bNewFileFlag = true;
     int cnt;
     int Vcnt = 0;
+    cv::Point pnt(0,0); //Saves Last Centroid Point in track. Used for speed measurement
+
 
     //Loop Over ROI
     for (ltROIlist::iterator it = vRoi.begin(); it != vRoi.end(); ++it)
@@ -861,13 +867,12 @@ int saveTracks(cvb::CvTracks& tracks,QString filename,std::string frameNumber)
             bNewFileFlag = false;
 
 
-
         if(data.open(QFile::WriteOnly |QFile::Append))
         {
 
             QTextStream output(&data);
             if (bNewFileFlag)
-                 output << "frameN,t(sec),TrackID,TrackBlobLabel,Centroid_X,Centroid_Y,Lifetime,Active,Inactive" << endl;
+                 output << "frameN,t(sec),TrackID,TrackBlobLabel,Centroid_X,Centroid_Y,Speed_PX,Lifetime,Active,Inactive" << endl;
 
             //Save Tracks In ROI
             for (cvb::CvTracks::const_iterator it=tracks.begin(); it!=tracks.end(); ++it)
@@ -876,16 +881,21 @@ int saveTracks(cvb::CvTracks& tracks,QString filename,std::string frameNumber)
                 cvb::CvTrack* cvT = it->second;
                 //cvb::CvLabel cvL = it->first;
 
-                cv::Point pnt;
+                //Calc Displacement from last point
+                cv::Point lastPt = cvT->pointStack[cvT->pointStack.size()-2].first;
+                float Ds = sqrt(pow(cvT->centroid.x-lastPt.x,2)+pow(cvT->centroid.y-lastPt.y,2));
+
+                //Save point as last point to use on next iterations
                 pnt.x = cvT->centroid.x;
                 pnt.y = cvT->centroid.y;
+
 
                 if (iroi.contains(pnt))
                     //Printing the position information +
                     //+ lifetime; ///< Indicates how much frames the object has been in scene.
                     //+active; ///< Indicates number of frames that has been active from last inactive period.
                     //+ inactive; ///< Indicates number of frames that has been missing.
-                    output << nFrame  << "," << (float)(nFrame/gdvidfps) << "," << cvT->id  << "," << cvT->label  << "," << cvT->centroid.x << "," << cvT->centroid.y << "," << cvT->lifetime  << "," << cvT->active  << "," << cvT->inactive <<  endl;
+                    output << nFrame  << "," << (float)(nFrame/gdvidfps) << "," << cvT->id  << "," << cvT->label  << "," << pnt.x << "," << pnt.y << "," << Ds << "," << cvT->lifetime  << "," << cvT->active  << "," << cvT->inactive <<  endl;
               }
             }
         data.close();

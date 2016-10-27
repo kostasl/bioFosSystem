@@ -603,7 +603,7 @@ extern "C" {
 #define CV_TRACK_RENDER_TO_LOG        0x0004 ///< Print track info to log out. \see cvRenderTrack
 #define CV_TRACK_RENDER_TO_STD        0x0008 ///< Print track info to log out. \see cvRenderTrack
 #define CV_TRACK_RENDER_PATH          0x0010 ///< Draw polyline of track positions \see cvRenderTrack
-#define CV_TRACK_RENDER_LUM           0x0020 ///< Draw polyline of track positions \see cvRenderTrack
+#define CV_TRACK_RENDER_LUM           0x1000 ///< Draw polyline of track positions \see cvRenderTrack
 #define CV_TRACK_RENDER_HEATMAP       0x0120 /// Draw the heatmap values on the left side of the pic
 
   /// \fn void cvRenderTracks(CvTracks const tracks, IplImage *imgSource, IplImage *imgDest, unsigned short mode=0x00ff, CvFont *font=NULL)
