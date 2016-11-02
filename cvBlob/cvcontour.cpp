@@ -59,9 +59,9 @@ namespace cvb
 
       if(img->roi)
       {
-	img_width = img->roi->width;
-	img_height = img->roi->height;
-	img_offset = (img->nChannels * img->roi->xOffset) + (img->roi->yOffset * stepDst);
+        img_width = img->roi->width;
+        img_height = img->roi->height;
+        img_offset = (img->nChannels * img->roi->xOffset) + (img->roi->yOffset * stepDst);
       }
 
       unsigned char *imgData = (unsigned char *)img->imageData + img_offset;
