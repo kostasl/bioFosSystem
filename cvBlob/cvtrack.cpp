@@ -612,7 +612,7 @@ namespace cvb
 
         if (mode & CV_TRACK_RENDER_HEATMAP) //With BIOLUM COLOURED Values
         {
-            const float rangesteps = 100.0f;
+            const float rangesteps = 50.0f;
             int c1                  = 0;
             double dnorm            = (double)(gmaxLumValue-gminLumValue);
             float increm              = (dnorm+1)/rangesteps;

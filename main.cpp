@@ -81,21 +81,21 @@ bool bMouseLButtonDown;
 //Bioluminescence Record
 QString infilename;
 std::vector<unsigned int> vLumRec; //Pointer to array of biolunim Data
-double gdLumRecfps = 10.0; ///NEED TO ADJUST THIS TO The biolum Rec either 10, or 0.5
-double gdvidfps = 13.0; //Automatically read from Video File Anyway
+double gdLumRecfps = 0.5; ///NEED TO ADJUST THIS TO The biolum Rec either 10, or 0.5
+double gdvidfps = 20.0; //Automatically read from Video File Anyway
 unsigned int nFrame;
-double  dContrast = 0.45;//0.7; //Allows changing the contrast
+double  dContrast = 1.3;//0.7; //Allows changing the contrast
 
 
-unsigned int gmaxLumValue = 30; //Find this value in the GAL+/AEQ+ active video
+unsigned int gmaxLumValue = 1500; //Find this value in the GAL+/AEQ+ active video
 unsigned int gminLumValue = 0; //This min value should be obtained from the controls
 int gframeLumValue = 0; //The lum value at the current video frame (int so -1 means Unset/missing)
 
 //Track Erase Filters
 const int inactiveFrameCount    = 3000; //Number of frames inactive until track is deleted
 const int thActive              = 1;// If a track becomes inactive but it has been active less than thActive frames, the track will be deleted.
-unsigned int gminTrackLength = 300;
-const int iLumIndexDelay       = 6.0*gdvidfps; //There is a sync issue between biolum record and Video - This is the number of frames Lum rec. needs to be delayed to match shutter open
+unsigned int gminTrackLength    = 300;
+const int iLumIndexDelay        = 6.0*gdLumRecfps; //There is a sync issue between biolum record and Video - This is the number of frames Lum rec. needs to be delayed to match shutter open
 
 //Area Filters
 double dMeanBlobArea = 70;
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
     unsigned int meanfileLum;
     readBiolumFile(vLumRec, infilename, maxfileLum,minfileLum,meanfileLum);
     cout << "Lum Record has min:" << minfileLum << " max:" << maxfileLum << " mean:" << meanfileLum << endl;
-    gmaxLumValue = meanfileLum*2; // 10*(round(maxfileLum/10.0));
+    //gmaxLumValue = meanfileLum*2; // 10*(round(maxfileLum/10.0));
     cout << "Set Max Lum To: "<< gmaxLumValue << endl;
 
     // get the applications dir pah and expose it to QML
