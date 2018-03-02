@@ -1,4 +1,5 @@
 # bioFosSystem
+##Bioluminescence Demo Supporting Material 2018
 
 -Contains support code and CAD design files used in making of the demo bioluminescence apparatus described in the paper
 by Marescotti, Lagogiannis, Davies, Webb and Armstrong 2018. 
