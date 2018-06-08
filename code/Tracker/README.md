@@ -41,18 +41,7 @@ http://opencv.org/downloads.html
  Qt4
 
 
-* How to run tests
 
-* Deployment instructions
-
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
 
 ### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+I am sorry this is all rather short and terse, if you found your way here through via the ref on the publication and need some help feel free to to Message me here, or costaslag .at. gmail dot com . 
