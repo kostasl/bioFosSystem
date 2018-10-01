@@ -4,7 +4,7 @@
 ### What is this repository for? ###
 
 * Quick summary
-A software that tracks moving larvae in timelapse videos, exporting 3 data csv files for each region of interest - vial. _N file contains the larvae count per frame, _pos contains position information of identified blobs (most possibly larvae) in the ROI, _pos_track.csv file exports the data from a basic tracking algorithm that attempts to link blobs across frames via track ID. 
+A software that tracks moving larvae in timelapse videos, exporting 3 data csv files for each region of interest . _N file contains the larvae count per frame, _pos contains position information of identified blobs (most possibly larvae) in the ROI, _pos_track.csv file exports the data from a basic tracking algorithm that attempts to link blobs across frames via track ID. 
 The package further contains a subfolder /matlabscripts, that allows for importing and analysing basic statistics of the exported data. 
 The data is not assumed clean, and some problems from the tracker are dealt with within the those scripts to clear the data.
 * Version
